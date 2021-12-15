@@ -152,7 +152,8 @@ class Signal_analysis():
             if timestamp[3] == pointer:
                 timestamp_store = timestamp    
             else:
-                loss_timestamp.append(timestamp_store)
+                for i in range(timestamp[3]-pointer):
+                    loss_timestamp.append(timestamp_store)
             pointer = timestamp[3] + 1
             
         #x and y stands for the timestamp (x) and the one-way latency (y) on the timestamp, respectively
