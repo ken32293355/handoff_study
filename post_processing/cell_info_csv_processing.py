@@ -1,3 +1,9 @@
+######csv_processing.py#########
+#==============instructions==============
+###### This file can process all the cellInfo csv files under a directory.
+###### After processing, the csv files can successfully be read by Python pandas 
+###### Ex. python csv_processing.py DIRRECTORY_NAME
+
 import os
 import sys
 
