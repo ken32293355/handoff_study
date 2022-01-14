@@ -2,7 +2,7 @@
 #==============instructions==============
 #!!!!! The get latency correctly, this code requires recompiling the iperf3, modifing the iperf_time_now function in iperf_time.c:
 #!!!!! (line 43:) result = clock_gettime(CLOCK_REALTIME, &ts);
-#!!!!! Otherwise, the timestamp is not the current time (but is monotone) and you can just compute the jitter.
+#!!!!! Otherwise, the timestamp of the pcap UDP file is not the current time (but is monotone), and you can only compute the jitter and cannot compute the one-way latency.
 
 ###### Firstly, to enable Python pandas package to read the csv file, the columns after "earfcn" are needed to be deleted (or places that don't have values are needed to filled in char "-")
 #           Make sure that after saving the monitor csv file, the "Date" column are not changed and still have information for "seconds" 
@@ -131,7 +131,7 @@ class Signal_analysis():
             #---------------------------------
             eth = dpkt.sll.SLL(buf)  
             
-            if len(eth.data) == 250+(4+20+8):    # We set the payload length to be 250 in iperf, so here we set the length checking to be 250 + 8 
+            if len(eth.data) == 250+(4+20+8):    # We set the payload length to be 250 in iperf, so here we set the length checking to be 250 + (4+20+8)
                 
                 ip = dpkt.ip.IP(eth.data[4:])
                 udp = ip.data
