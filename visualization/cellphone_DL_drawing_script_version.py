@@ -1,7 +1,5 @@
-######cellphone_DL_magic_iperf_version.py#########
+######cellphone_DL_script_version.py#########
 #==============instructions==============
-#example command:
-#python cellphone_DL_magic_iperf_version.py "testing files\xm1\012722031833_new.csv" "testing files\xm1\22-01-27-15-18-16.pcap" 0
 
 #!!!!! The get latency correctly, this code requires recompiling the iperf3, modifing the iperf_time_now function in iperf_time.c:
 #!!!!! (line 43:) result = clock_gettime(CLOCK_REALTIME, &ts);
@@ -48,9 +46,9 @@ def get_loss_latency(pcap):
         #---------------------------------
         eth = dpkt.sll.SLL(buf)  
         
-        if (len(eth.data) - (4+20+8)) % 250 == 0:    # We set the payload length to be 250 in iperf, so here we set the length checking to be 250 + (4+20+8)
+        if (len(eth.data) - (20+8)) % 250 == 0:    # We set the payload length to be 250 in iperf, so here we set the length checking to be 250 + (4+20+8)
             
-            ip = dpkt.ip.IP(eth.data[4:])
+            ip = eth.data
             udp = ip.data
             
             dst_ip_addr_str = socket.inet_ntoa(ip.dst)
@@ -59,7 +57,7 @@ def get_loss_latency(pcap):
             
             #------------only DL data left--------------
             #bug fix: duplicate packets | credit: JingYou
-            duplicate_num = (len(eth.data) - (4+20+8)) // 250
+            duplicate_num = (len(eth.data) - (20+8)) // 250
             
             datetimedec = int(udp.data.hex()[0:8], 16)
             microsec = int(udp.data.hex()[8:16], 16)
@@ -104,12 +102,7 @@ def get_loss_latency(pcap):
         
         y.append( ( timestamp_list[i][0]+3600*8 - (timestamp_list[i][1] + timestamp_list[i][2]/1000000. + 3600*8) ) * 1000 )
     
-    print("number of packet", len(timestamp_list))
-    print("number of lost packet", len(loss_timestamp))
-    if len(timestamp_list):
-        print("packet loss rate", len(loss_timestamp) / len(timestamp_list))
-    
-    latency = [x,y]
+    latency = [x, y]
     
     return loss_timestamp, latency
 
