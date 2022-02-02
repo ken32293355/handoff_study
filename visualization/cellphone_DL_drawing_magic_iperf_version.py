@@ -1,11 +1,17 @@
-######cellphone_UL.py#########
+######cellphone_DL_magic_iperf_version.py#########
 #==============instructions==============
-#example:
-#python cellphone_UL_magic_iperf_version.py "testing files\092921080410.csv" "testing files\09292000.pcap" 0
+#example command:
+#python cellphone_DL_drawing_magic_iperf_version.py "testing files\xm1\012722031833_new.csv" "testing files\xm1\22-01-27-15-18-16.pcap" 0
+
+#!!!!! The get latency correctly, this code requires recompiling the iperf3, modifing the iperf_time_now function in iperf_time.c:
+#!!!!! (line 43:) result = clock_gettime(CLOCK_REALTIME, &ts);
+#!!!!! Otherwise, the timestamp of the pcap UDP file is not the current time (but is monotone), and you can only compute the jitter and cannot compute the one-way latency.
+
 ###### Firstly, to enable Python pandas package to read the csv file, the columns after "earfcn" are needed to be deleted (or places that don't have values are needed to filled in char "-")
 #           Make sure that after saving the monitor csv file, the "Date" column are not changed and still have information for "seconds" 
 ###### Finally, choose the start time and end time (optional)
 #           format example: "2021/01/27,15:48:17" 
+
 
 import pandas as pd
 import datetime as dt
@@ -17,6 +23,8 @@ import os
 
 import dpkt
 import sys
+
+import socket
 
 import matplotlib
 font = {'family' : 'normal',
@@ -35,16 +43,23 @@ def get_loss_latency(pcap):
     #-----------------------------------------------------------------------------------------------
    
     for ts, buf in pcap:
-        if len(buf) != 292:
-            continue
-            
+
         #Extract payload of the UDP packet
         #---------------------------------
-        eth = dpkt.ethernet.Ethernet(buf)
-        ip = eth.ip         
-        udp = ip.data     
+        eth = dpkt.sll.SLL(buf)  
         
-        if len(udp) == 250+8:    # We set the payload length to be 250 in iperf, so here we set the length checking to be 250 + 8 
+        if (len(eth.data) - (4+20+8)) % 250 == 0:    # We set the payload length to be 250 in iperf, so here we set the length checking to be 250 + (4+20+8)
+            
+            ip = dpkt.ip.IP(eth.data[4:])
+            udp = ip.data
+            
+            dst_ip_addr_str = socket.inet_ntoa(ip.dst)
+            if dst_ip_addr_str == "140.112.20.183":
+                continue
+            
+            #------------only DL data left--------------
+            #bug fix: duplicate packets | credit: JingYou
+            duplicate_num = (len(eth.data) - (4+20+8)) // 250
             
             datetimedec = int(udp.data.hex()[0:8], 16)
             microsec = int(udp.data.hex()[8:16], 16)
@@ -53,8 +68,8 @@ def get_loss_latency(pcap):
             
             if seq == 1:
                 timestamp_list = []
-            
-            timestamp_list.append((ts, datetimedec, microsec, seq))
+            for i in range(duplicate_num):
+                timestamp_list.append((ts, datetimedec, microsec, seq+i))
            
     timestamp_list = sorted(timestamp_list, key = lambda v : v[3])  #We consider out of order UDP packets
 
@@ -71,9 +86,9 @@ def get_loss_latency(pcap):
             if timestamp_store == None:
                 continue
             loss_linspace = np.linspace(timestamp_store, timestamp, timestamp[3]-pointer+2)
-                
+            
             for i in loss_linspace:
-                loss_time = dt.datetime.utcfromtimestamp(i[1]+i[2]/1000000.) + dt.timedelta(hours=8)
+                loss_time = dt.datetime.utcfromtimestamp(i[0]) + dt.timedelta(hours=8)
                 loss_timestamp.append(loss_time)
                 
         pointer = timestamp[3] + 1
@@ -84,10 +99,15 @@ def get_loss_latency(pcap):
     y = []
     
     for i in range(len(timestamp_list)):
-        transmitted_time = dt.datetime.utcfromtimestamp(timestamp_list[i][1] + timestamp_list[i][2]/1000000.) + dt.timedelta(seconds=3600*8) #for pcap packets, the timestamps are needed to add 8 hours (timezone) 
-        x.append(transmitted_time)
+        arrival_time = dt.datetime.utcfromtimestamp(timestamp_list[i][0]) + dt.timedelta(seconds=3600*8) #for pcap packets, the timestamps are needed to add 8 hours (timezone) 
+        x.append(arrival_time)
         
         y.append( ( timestamp_list[i][0]+3600*8 - (timestamp_list[i][1] + timestamp_list[i][2]/1000000. + 3600*8) ) * 1000 )
+    
+    print("number of packet", len(timestamp_list))
+    print("number of lost packet", len(loss_timestamp))
+    if len(timestamp_list):
+        print("packet loss rate", len(loss_timestamp) / len(timestamp_list))
     
     latency = [x,y]
     
@@ -100,7 +120,7 @@ class Signal_analysis():
         #self.df.loc[:, "Date"] = pd.to_datetime(self.df.loc[:, "Date"]) 
         #If the above line has bug, comment the line and try this:
         for i in range(len(self.df)):
-            self.df.loc[i, "Date"] = dt.datetime.strptime(self.df.loc[i, "Date"], '%m/%d/%y %H:%M:%S') #10/03/21 21:02:06
+            self.df.loc[i, "Date"] = dt.datetime.strptime(self.df.loc[i, "Date"], '%m/%d/%y %H:%M:%S ') #10/03/21 21:02:06
        
         self.begin_time = self.df.loc[self.df.index[0], "Date"]
         self.end_time = self.df.loc[self.df.index[-1], "Date"]
@@ -112,8 +132,7 @@ class Signal_analysis():
         for i in range(len(self.df)):
             if self.df.loc[i, "MNC"] != "0" and self.df.loc[i, "MNC"] != "-":
                 self.MNC = self.df.loc[i, "MNC"]
-
-
+       
     def show_figure(self):
         fig , ax = plt.subplots(2, 1, sharex=True, sharey=False)
         
@@ -184,15 +203,18 @@ class Signal_analysis():
 
         loss_timestamp, latency = get_loss_latency(pcap)
         [x,y] = latency
-        
+
         for i in range(len(y)): #there are difference between the time of the cell phone and that of the server; we need to synchronize them
             y[i] = y[i] - int(sys.argv[3])
 
         #Plot one-way latency and packet loss on the lower figure
         #--------------------------------------------------------
         plt.plot(x, y, color='b', label="latency")
+        
+        
        
         for index, loss_time in zip(range(len(loss_timestamp)), loss_timestamp):
+           
             if index == 0:
                 plt.plot([loss_time, loss_time], [sorted(y)[0]-10, sorted(y)[-1]+10], color='r', label="packet loss")    
             else:
@@ -221,6 +243,9 @@ class Signal_analysis():
             start_time = pd.to_datetime(sys.argv[4], format='%Y/%m/%d,%H:%M:%S')
             end_time = pd.to_datetime(sys.argv[5], format='%Y/%m/%d,%H:%M:%S')
             plt.xlim(start_time, end_time)
+        
+        
+        
         
         plt.show()        
         
