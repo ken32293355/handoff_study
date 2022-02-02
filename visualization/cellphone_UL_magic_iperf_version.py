@@ -1,5 +1,7 @@
 ######cellphone_UL.py#########
 #==============instructions==============
+#example:
+#python cellphone_UL_magic_iperf_version.py "testing files\092921080410.csv" "testing files\09292000.pcap" 0
 ###### Firstly, to enable Python pandas package to read the csv file, the columns after "earfcn" are needed to be deleted (or places that don't have values are needed to filled in char "-")
 #           Make sure that after saving the monitor csv file, the "Date" column are not changed and still have information for "seconds" 
 ###### Finally, choose the start time and end time (optional)
@@ -58,7 +60,7 @@ def get_loss_latency(pcap):
 
     pointer = 1
     timestamp_store = None
-    loss_time_list = []
+    loss_timestamp = []
 
     #Checking packet loss...
     #----------------------------------------------
@@ -72,7 +74,7 @@ def get_loss_latency(pcap):
                 
             for i in loss_linspace:
                 loss_time = dt.datetime.utcfromtimestamp(i[1]+i[2]/1000000.) + dt.timedelta(hours=8)
-                loss_time_list.append(lost_time)
+                loss_timestamp.append(loss_time)
                 
         pointer = timestamp[3] + 1
         
@@ -190,8 +192,7 @@ class Signal_analysis():
         #--------------------------------------------------------
         plt.plot(x, y, color='b', label="latency")
        
-        for index, i in zip(range(len(loss_timestamp)), loss_timestamp):
-            lost_time = dt.datetime.utcfromtimestamp(i[0]) + dt.timedelta(hours=8) #for pcap packets, the timestamps are needed to add 8 hours (timezone)
+        for index, lost_time in zip(range(len(loss_timestamp)), loss_timestamp):
             if index == 0:
                 plt.plot([lost_time, lost_time], [sorted(y)[0]-10, sorted(y)[-1]+10], color='r', label="packet loss")    
             else:
