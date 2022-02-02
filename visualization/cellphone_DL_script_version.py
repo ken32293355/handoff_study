@@ -83,9 +83,9 @@ def get_loss_latency(pcap):
         else:
             if timestamp_store == None:
                 continue
-            loss_linespace = np.linspace(timestamp_store, timestamp, timestamp[3]-pointer+2)
+            loss_linspace = np.linspace(timestamp_store, timestamp, timestamp[3]-pointer+2)
             
-            for i in loss_linespace:
+            for i in loss_linspace:
                 loss_time = dt.datetime.utcfromtimestamp(i[0]) + dt.timedelta(hours=8)
                 loss_timestamp.append(loss_time)
                 
@@ -211,12 +211,12 @@ class Signal_analysis():
         
         
        
-        for index, lost_time in zip(range(len(loss_timestamp)), loss_timestamp):
+        for index, loss_time in zip(range(len(loss_timestamp)), loss_timestamp):
            
             if index == 0:
-                plt.plot([lost_time, lost_time], [sorted(y)[0]-10, sorted(y)[-1]+10], color='r', label="packet loss")    
+                plt.plot([loss_time, loss_time], [sorted(y)[0]-10, sorted(y)[-1]+10], color='r', label="packet loss")    
             else:
-                plt.plot([lost_time, lost_time], [sorted(y)[0]-10, sorted(y)[-1]+10], color='r')  
+                plt.plot([loss_time, loss_time], [sorted(y)[0]-10, sorted(y)[-1]+10], color='r')  
                 
         #Other setting for the lower figure
         #--------------------------------------------------------

@@ -38,7 +38,7 @@ def get_loss_latency_UL(pcap):
 
     pointer = 1
     timestamp_store = None
-    loss_time_list = []
+    loss_timestamp = []
 
     #Checking packet loss...
     #----------------------------------------------
@@ -52,7 +52,7 @@ def get_loss_latency_UL(pcap):
                 
             for i in loss_linspace:
                 loss_time = dt.datetime.utcfromtimestamp(i[1]+i[2]/1000000.) + dt.timedelta(hours=8)
-                loss_time_list.append(lost_time)
+                loss_timestamp.append(loss_time)
                 
         pointer = timestamp[3] + 1
         
@@ -69,7 +69,7 @@ def get_loss_latency_UL(pcap):
     
     latency = [x,y]
     
-    return loss_time_list, latency
+    return loss_timestamp, latency
 
 def get_loss_latency_DL(pcap):
     timestamp_list = []
@@ -121,9 +121,9 @@ def get_loss_latency_DL(pcap):
         else:
             if timestamp_store == None:
                 continue
-            loss_linespace = np.linspace(timestamp_store, timestamp, timestamp[3]-pointer+2)
+            loss_linspace = np.linspace(timestamp_store, timestamp, timestamp[3]-pointer+2)
             
-            for i in loss_linespace:
+            for i in loss_linspace:
                 loss_time = dt.datetime.utcfromtimestamp(i[0]) + dt.timedelta(hours=8)
                 loss_timestamp.append(loss_time)
                 
@@ -157,22 +157,22 @@ fig , ax = plt.subplots(2, 1, sharex=True, sharey=False)
 
 f = open(server_UL_file, "rb")
 pcap = dpkt.pcap.Reader(f)
-UL_loss_time_list, UL_latency = get_loss_latency_UL(pcap)
+UL_loss_timestamp, UL_latency = get_loss_latency_UL(pcap)
 
 f = open(cell_phone_file, "rb")
 pcap = dpkt.pcap.Reader(f)
-DL_loss_time_list, DL_latency = get_loss_latency_DL(pcap)
+DL_loss_timestamp, DL_latency = get_loss_latency_DL(pcap)
 
-print(len(UL_loss_time_list), len(DL_loss_time_list))
+print(len(UL_loss_timestamp), len(DL_loss_timestamp))
 
 plt.subplot(2,1,1)
 plt.plot(UL_latency[0], UL_latency[1], c='blue')
-for loss_time in UL_loss_time_list:
-    plt.axvline(loss, c='red')
+for loss_time in UL_loss_timestamp:
+    plt.axvline(loss_time, c='red')
 
 plt.subplot(2,1,2)
 plt.plot(DL_latency[0], DL_latency[1], c='blue')
-for loss_time in DL_loss_time_list:
-    plt.axvline(loss, c='red')
+for loss_time in DL_loss_timestamp:
+    plt.axvline(loss_time, c='red')
 
 plt.show()

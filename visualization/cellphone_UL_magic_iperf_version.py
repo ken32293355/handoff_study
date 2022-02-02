@@ -192,11 +192,11 @@ class Signal_analysis():
         #--------------------------------------------------------
         plt.plot(x, y, color='b', label="latency")
        
-        for index, lost_time in zip(range(len(loss_timestamp)), loss_timestamp):
+        for index, loss_time in zip(range(len(loss_timestamp)), loss_timestamp):
             if index == 0:
-                plt.plot([lost_time, lost_time], [sorted(y)[0]-10, sorted(y)[-1]+10], color='r', label="packet loss")    
+                plt.plot([loss_time, loss_time], [sorted(y)[0]-10, sorted(y)[-1]+10], color='r', label="packet loss")    
             else:
-                plt.plot([lost_time, lost_time], [sorted(y)[0]-10, sorted(y)[-1]+10], color='r')  
+                plt.plot([loss_time, loss_time], [sorted(y)[0]-10, sorted(y)[-1]+10], color='r')  
                 
         #Other setting for the lower figure
         #--------------------------------------------------------
