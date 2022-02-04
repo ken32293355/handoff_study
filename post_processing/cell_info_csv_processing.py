@@ -13,7 +13,7 @@ filenames = os.listdir(dirname)
 csv_files = []
 for filename in filenames:
     if ".csv" in filename:
-        csv_files.append(dirname + "\\" + filename)
+        csv_files.append(dirname + filename)
         
 for csv_file in csv_files:
     f = open(csv_file, 'r')
@@ -48,8 +48,8 @@ for csv_file in csv_files:
         row_size = len(line.split(","))
         append_line = line[:-1]
         for i in range(max_row_size - row_size):
-            append_line = append_line + ", -"
+            append_line = append_line + ",-"
         append_line = append_line + "\n"
         fnew.write(append_line)
-f.close()
-fnew.close()
+    f.close()
+    fnew.close()
