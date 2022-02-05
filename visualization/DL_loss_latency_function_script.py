@@ -12,13 +12,19 @@ import sys
 import socket
 
 
-def get_loss_latency(pcap):
+
+def get_loss_latency(pcap_filename):
+
+    f = open(pcap_filename, "rb")
+    pcap = dpkt.pcap.Reader(f)
+
     timestamp_list = []
 
     #This for loop parse the payload of the iperf3 UDP packets and store the timestamps and the sequence numbers in timestamp_list; 
     #The timestamp is stored in the first 8 bytes, and the sequence number is stored in the 9~12 bytes
     #-----------------------------------------------------------------------------------------------
-   
+
+    seq_set = set()
     for ts, buf in pcap:
 
         #Extract payload of the UDP packet
@@ -46,8 +52,9 @@ def get_loss_latency(pcap):
             if seq == 1:
                 timestamp_list = []
             for i in range(duplicate_num):
-                timestamp_list.append((ts, datetimedec, microsec, seq+i))
-           
+                if seq+i not in seq_set:
+                    seq_set.add(seq+i)
+                    timestamp_list.append((ts, datetimedec, microsec, seq+i))
     timestamp_list = sorted(timestamp_list, key = lambda v : v[3])  #We consider out of order UDP packets
 
     pointer = 1
@@ -58,7 +65,7 @@ def get_loss_latency(pcap):
     #----------------------------------------------
     for timestamp in timestamp_list:
         if timestamp[3] == pointer:
-            timestamp_store = timestamp    
+            timestamp_store = timestamp
         else:
             if timestamp_store == None:
                 continue
@@ -85,11 +92,3 @@ def get_loss_latency(pcap):
     
     return loss_timestamp, latency
     
-cell_phone_file = "testing files\\22-01-16-18-03-28.pcap"
-f = open(cell_phone_file, "rb")
-pcap = dpkt.pcap.Reader(f)
-loss_timestamp, latency = get_loss_latency(pcap)
-
-print("number of packet", len(latency[0]))
-print("number of lost packet", len(loss_timestamp))
-print("packet loss rate", len(loss_timestamp) / len(latency[0]))
