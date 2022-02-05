@@ -24,8 +24,8 @@ def compare(file1, file2):
     df2.reset_index(inplace=True)
     time_l1 = pci_changetime(df1)
     time_l2 = pci_changetime(df2)
-    print(set(df1.loc[:, "earfcn"]))
-    print(set(df2.loc[:, "earfcn"]))
+    # print(set(df1.loc[:, "earfcn"]))
+    # print(set(df2.loc[:, "earfcn"]))
     diff_l1 = np.empty_like(time_l1)
     diff_l2 = np.empty_like(time_l2)
     for i in range(len(time_l1)):
@@ -38,12 +38,7 @@ def compare(file1, file2):
     # print(diff_l2)
     onesecond = dt.timedelta(seconds=1)
     twosecond = dt.timedelta(seconds=2)
-    print(len(diff_l1), (diff_l1 > onesecond).sum() / len(diff_l1), (diff_l1 <= onesecond).sum() / len(diff_l1))
-    print(len(diff_l2), (diff_l2 > onesecond).sum() / len(diff_l2), (diff_l2 <= onesecond).sum() / len(diff_l2))
-
-    print(len(diff_l1), (diff_l1 > twosecond).sum() / len(diff_l1), (diff_l1 <= twosecond).sum() / len(diff_l1))
-    print(len(diff_l2), (diff_l2 > twosecond).sum() / len(diff_l2), (diff_l2 <= twosecond).sum() / len(diff_l2))
-    exit()
+    print(len(diff_l1), len(diff_l2), (diff_l1 > onesecond).sum() / len(diff_l1), (diff_l2 > onesecond).sum() / len(diff_l2), (diff_l1 > twosecond).sum() / len(diff_l1), (diff_l2 > twosecond).sum() / len(diff_l2), sep=",")
 
     return diff_l1, diff_l2
 
@@ -175,9 +170,9 @@ if __name__ == "__main__":
     8 0.875 0.125
     """
 
-    datasetpath = r"C:\Users\User\Desktop\data\0117"
-    file1 = os.path.join(datasetpath, "xiaomi", "round1.csv")
-    file2 = os.path.join(datasetpath, "s20", "round1.csv")
+    # datasetpath = r"C:\Users\User\Desktop\data\0117"
+    # file1 = os.path.join(datasetpath, "xiaomi", "round1.csv")
+    # file2 = os.path.join(datasetpath, "s20", "round1.csv")
     # compare(file1=file1, file2=file2)
     """
     {1275}
@@ -188,9 +183,33 @@ if __name__ == "__main__":
     28 0.7857142857142857 0.21428571428571427
     """
 
-    datasetpath = r"C:\Users\User\Desktop\data\0117"
-    file1 = os.path.join(datasetpath, "xiaomi", "round2.csv")
-    file2 = os.path.join(datasetpath, "s20", "round2.csv")
+    # datasetpath = r"C:\Users\User\Desktop\data\0117"
+    # file1 = os.path.join(datasetpath, "xiaomi", "round2.csv")
+    # file2 = os.path.join(datasetpath, "s20", "round2.csv")
+    # compare(file1=file1, file2=file2)
+
+    # datasetpath = r"C:\Users\USER\Desktop\0205data"
+    # file1 = os.path.join(datasetpath, "ss1", "round1.csv")
+    # file2 = os.path.join(datasetpath, "ss2", "round1.csv")
+    # compare(file1=file1, file2=file2)
+
+
+    datasetpath = r"C:\Users\USER\Desktop\0205data"
+    file1 = os.path.join(datasetpath, "ss1", "round2.csv")
+    file2 = os.path.join(datasetpath, "ss2", "round2.csv")
     compare(file1=file1, file2=file2)
 
+    datasetpath = r"C:\Users\USER\Desktop\0205data"
+    file1 = os.path.join(datasetpath, "ss1", "round3.csv")
+    file2 = os.path.join(datasetpath, "ss2", "round3.csv")
+    compare(file1=file1, file2=file2)
 
+    datasetpath = r"C:\Users\USER\Desktop\0205data"
+    file1 = os.path.join(datasetpath, "ss1", "round4.csv")
+    file2 = os.path.join(datasetpath, "ss2", "round4.csv")
+    compare(file1=file1, file2=file2)
+
+    datasetpath = r"C:\Users\USER\Desktop\0205data"
+    file1 = os.path.join(datasetpath, "ss1", "round5.csv")
+    file2 = os.path.join(datasetpath, "ss2", "round5.csv")
+    compare(file1=file1, file2=file2)
