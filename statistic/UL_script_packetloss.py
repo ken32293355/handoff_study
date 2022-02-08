@@ -81,36 +81,36 @@ def get_loss_latency_UL(pcapfilename):
 
 
 
-# pcap_filename = r"C:\Users\USER\Desktop\data\ss1\round1_UL.pcap"
-# UL_loss_timestamp, UL_latency = get_loss_latency_UL(pcap_filename)
-# print(len(UL_latency[0]), len(UL_loss_timestamp), len(UL_loss_timestamp) / len(UL_latency[0]))
-# pcap_filename = r"C:\Users\USER\Desktop\data\ss1\round2_UL_2.pcap"
-# UL_loss_timestamp, UL_latency = get_loss_latency_UL(pcap_filename)
-# print(len(UL_latency[0]), len(UL_loss_timestamp), len(UL_loss_timestamp) / len(UL_latency[0]))
-# pcap_filename = r"C:\Users\USER\Desktop\data\ss1\round3_UL.pcap"
-# UL_loss_timestamp, UL_latency = get_loss_latency_UL(pcap_filename)
-# print(len(UL_latency[0]), len(UL_loss_timestamp), len(UL_loss_timestamp) / len(UL_latency[0]))
-# pcap_filename = r"C:\Users\USER\Desktop\data\ss1\round4_UL.pcap"
-# UL_loss_timestamp, UL_latency = get_loss_latency_UL(pcap_filename)
-# print(len(UL_latency[0]), len(UL_loss_timestamp), len(UL_loss_timestamp) / len(UL_latency[0]))
-# pcap_filename = r"C:\Users\USER\Desktop\data\ss1\round5_UL.pcap"
-# UL_loss_timestamp, UL_latency = get_loss_latency_UL(pcap_filename)
-# print(len(UL_latency[0]), len(UL_loss_timestamp), len(UL_loss_timestamp) / len(UL_latency[0]))
+pcap_filename = r"C:\Users\USER\Desktop\0205data\ss1\round1_UL.pcap"
+UL_loss_timestamp, UL_latency = get_loss_latency_UL(pcap_filename)
+print(len(UL_latency[0]), len(UL_loss_timestamp), len(UL_loss_timestamp) / len(UL_latency[0]))
+pcap_filename = r"C:\Users\USER\Desktop\0205data\ss1\round2_UL.pcap"
+UL_loss_timestamp, UL_latency = get_loss_latency_UL(pcap_filename)
+print(len(UL_latency[0]), len(UL_loss_timestamp), len(UL_loss_timestamp) / len(UL_latency[0]))
+pcap_filename = r"C:\Users\USER\Desktop\0205data\ss1\round3_UL.pcap"
+UL_loss_timestamp, UL_latency = get_loss_latency_UL(pcap_filename)
+print(len(UL_latency[0]), len(UL_loss_timestamp), len(UL_loss_timestamp) / len(UL_latency[0]))
+pcap_filename = r"C:\Users\USER\Desktop\0205data\ss1\round4_UL.pcap"
+UL_loss_timestamp, UL_latency = get_loss_latency_UL(pcap_filename)
+print(len(UL_latency[0]), len(UL_loss_timestamp), len(UL_loss_timestamp) / len(UL_latency[0]))
+pcap_filename = r"C:\Users\USER\Desktop\0205data\ss1\round5_UL.pcap"
+UL_loss_timestamp, UL_latency = get_loss_latency_UL(pcap_filename)
+print(len(UL_latency[0]), len(UL_loss_timestamp), len(UL_loss_timestamp) / len(UL_latency[0]))
 
 # print("---")
 
-# pcap_filename = r"C:\Users\USER\Desktop\data\ss2_A42\round1_UL.pcap"
-# UL_loss_timestamp, UL_latency = get_loss_latency_UL(pcap_filename)
-# print(len(UL_latency[0]), len(UL_loss_timestamp), len(UL_loss_timestamp) / len(UL_latency[0]))
-# pcap_filename = r"C:\Users\USER\Desktop\data\ss2_A42\round2_UL.pcap"
-# UL_loss_timestamp, UL_latency = get_loss_latency_UL(pcap_filename)
-# print(len(UL_latency[0]), len(UL_loss_timestamp), len(UL_loss_timestamp) / len(UL_latency[0]))
-# pcap_filename = r"C:\Users\USER\Desktop\data\ss2_A42\round3_UL.pcap"
-# UL_loss_timestamp, UL_latency = get_loss_latency_UL(pcap_filename)
-# print(len(UL_latency[0]), len(UL_loss_timestamp), len(UL_loss_timestamp) / len(UL_latency[0]))
-# pcap_filename = r"C:\Users\USER\Desktop\data\ss2_A42\round4_UL.pcap"
-# UL_loss_timestamp, UL_latency = get_loss_latency_UL(pcap_filename)
-# print(len(UL_latency[0]), len(UL_loss_timestamp), len(UL_loss_timestamp) / len(UL_latency[0]))
-# pcap_filename = r"C:\Users\USER\Desktop\data\ss2_A42\round5_UL.pcap"
-# UL_loss_timestamp, UL_latency = get_loss_latency_UL(pcap_filename)
-# print(len(UL_latency[0]), len(UL_loss_timestamp), len(UL_loss_timestamp) / len(UL_latency[0]))
+pcap_filename = r"C:\Users\USER\Desktop\0205data\ss2\round1_UL.pcap"
+UL_loss_timestamp, UL_latency = get_loss_latency_UL(pcap_filename)
+print(len(UL_latency[0]), len(UL_loss_timestamp), len(UL_loss_timestamp) / len(UL_latency[0]))
+pcap_filename = r"C:\Users\USER\Desktop\0205data\ss2\round2_UL.pcap"
+UL_loss_timestamp, UL_latency = get_loss_latency_UL(pcap_filename)
+print(len(UL_latency[0]), len(UL_loss_timestamp), len(UL_loss_timestamp) / len(UL_latency[0]))
+pcap_filename = r"C:\Users\USER\Desktop\0205data\ss2\round3_UL.pcap"
+UL_loss_timestamp, UL_latency = get_loss_latency_UL(pcap_filename)
+print(len(UL_latency[0]), len(UL_loss_timestamp), len(UL_loss_timestamp) / len(UL_latency[0]))
+pcap_filename = r"C:\Users\USER\Desktop\0205data\ss2\round4_UL.pcap"
+UL_loss_timestamp, UL_latency = get_loss_latency_UL(pcap_filename)
+print(len(UL_latency[0]), len(UL_loss_timestamp), len(UL_loss_timestamp) / len(UL_latency[0]))
+pcap_filename = r"C:\Users\USER\Desktop\0205data\ss2\round5_UL.pcap"
+UL_loss_timestamp, UL_latency = get_loss_latency_UL(pcap_filename)
+print(len(UL_latency[0]), len(UL_loss_timestamp), len(UL_loss_timestamp) / len(UL_latency[0]))

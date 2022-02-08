@@ -11,7 +11,12 @@ import sys
 
 import socket
 
-def get_loss_latency(pcap):
+def get_loss_latency(pcap_filename):
+
+    f = open(pcap_filename, "rb")
+    pcap = dpkt.pcap.Reader(f)
+
+
     timestamp_list = []
 
     #This for loop parse the payload of the iperf3 UDP packets and store the timestamps and the sequence numbers in timestamp_list; 
@@ -57,7 +62,9 @@ def get_loss_latency(pcap):
     #----------------------------------------------
     for timestamp in timestamp_list:
         if timestamp[3] == pointer:
-            timestamp_store = timestamp    
+            timestamp_store = timestamp
+        elif timestamp[3] == pointer - 1: #??
+            timestamp_store = timestamp
         else:
             if timestamp_store == None:
                 continue
@@ -84,11 +91,32 @@ def get_loss_latency(pcap):
     
     return loss_timestamp, latency
     
-filename = "testing files\\xm1\\22-01-27-15-18-16.pcap"
-f = open(filename, "rb")
-pcap = dpkt.pcap.Reader(f)
-loss_timestamp, latency = get_loss_latency(pcap)
+filename = r"C:\Users\USER\Desktop\0205data\ss1\round1.pcap"
+loss_timestamp, latency = get_loss_latency(filename)
+print("number of packet", len(latency[0]))
+print("number of lost packet", len(loss_timestamp))
+print("packet loss rate", len(loss_timestamp) / len(latency[0]))
 
+filename = r"C:\Users\USER\Desktop\0205data\ss1\round2.pcap"
+loss_timestamp, latency = get_loss_latency(filename)
+print("number of packet", len(latency[0]))
+print("number of lost packet", len(loss_timestamp))
+print("packet loss rate", len(loss_timestamp) / len(latency[0]))
+
+filename = r"C:\Users\USER\Desktop\0205data\ss1\round3.pcap"
+loss_timestamp, latency = get_loss_latency(filename)
+print("number of packet", len(latency[0]))
+print("number of lost packet", len(loss_timestamp))
+print("packet loss rate", len(loss_timestamp) / len(latency[0]))
+
+filename = r"C:\Users\USER\Desktop\0205data\ss1\round4.pcap"
+loss_timestamp, latency = get_loss_latency(filename)
+print("number of packet", len(latency[0]))
+print("number of lost packet", len(loss_timestamp))
+print("packet loss rate", len(loss_timestamp) / len(latency[0]))
+
+filename = r"C:\Users\USER\Desktop\0205data\ss1\round5.pcap"
+loss_timestamp, latency = get_loss_latency(filename)
 print("number of packet", len(latency[0]))
 print("number of lost packet", len(loss_timestamp))
 print("packet loss rate", len(loss_timestamp) / len(latency[0]))
