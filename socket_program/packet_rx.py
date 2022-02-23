@@ -11,9 +11,9 @@ import os
 import queue
 
 HOST = '140.112.20.183'
-PORT = 3237
-HOST2 = "192.168.1.153"  # The server's hostname or IP address
-PORT2 = 3232  # The port used by the server
+PORT = 3700
+# HOST2 = "192.168.1.153"  # The server's hostname or IP address
+# PORT2 = 3232  # The port used by the server
 server_addr = (HOST, PORT)
 thread_stop = False
 exitprogram = False
@@ -25,15 +25,12 @@ def connection_setup():
     s_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s_tcp.connect((HOST, PORT))
     s_udp.sendto("123".encode(), server_addr) # Required! don't comment it
-    s_local = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # s_local = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    # s_local.connect((HOST2, PORT2))
 
-    return s_tcp, s_udp, s_local
+    return s_tcp, s_udp
 
 
 
-def bybass_rx(s_udp, s_local):
+def bybass_rx(s_udp):
     s_udp.settimeout(10)
     print("wait for indata...")
     i = 0
@@ -73,18 +70,6 @@ def bybass_rx(s_udp, s_local):
     print("Total capture: ", i, "Total lose: ", seq - i + 1)
     print("STOP bypass")
 
-
-def bybass_tx(s_local):
-    global buffer
-    global thread_stop
-    # while not thread_stop:
-    #     try:
-#             indata = buffer.get(timeout=5)
-#             s_local.sendall(indata)
-    #     except Exception as inst:
-    #         print("tx error", thread_stop)
-    #         print("Error: ", inst)
-    print("STOP TX")
 while not exitprogram:
     try:
         x = input("Press Enter to start\n")
@@ -92,17 +77,15 @@ while not exitprogram:
             break
         now = dt.datetime.today()
         n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
-        os.system("tcpdump -i any net 140.112.20.183 -w %s.pcap &"%(n))
-        s_tcp, s_udp, s_local = connection_setup()
+        # os.system("tcpdump -i any net 140.112.20.183 -w %s.pcap &"%(n))
+        s_tcp, s_udp = connection_setup()
     except Exception as inst:
         print("Error: ", inst)
-        os.system("pkill tcpdump")
+        # os.system("pkill tcpdump")
         continue
     thread_stop = False
-    t = threading.Thread(target=bybass_rx, args=(s_udp,s_local))
-    t2 = threading.Thread(target=bybass_tx, args=(s_local,))
+    t = threading.Thread(target=bybass_rx, args=(s_udp, ))
     t.start()
-    t2.start()
     while True and t.is_alive():
         x = input("Enter STOP to Stop\n")
         if x == "STOP":
@@ -115,9 +98,7 @@ while not exitprogram:
             s_tcp.sendall("EXIT".encode())
     thread_stop = True
     t.join()
-    t2.join()
     s_tcp.close()
     s_udp.close()
-    s_local.close()
 
-    os.system("pkill tcpdump")
+    # os.system("pkill tcpdump")
