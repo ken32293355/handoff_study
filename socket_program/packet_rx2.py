@@ -10,6 +10,10 @@ import sys
 import os
 import queue
 
+
+if not hasattr(socket, 'SO_BINDTODEVICE'):
+    socket.SO_BINDTODEVICE = 25
+
 HOST = '140.112.20.183'
 PORT = 3237
 server_addr = (HOST, PORT)
@@ -19,12 +23,18 @@ exitprogram = False
 buffer = queue.Queue()
 
 def connection_setup():
+    interface1 = 'usb0'
+    interifcongiface2 = 'usb1'
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s_udp1 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s_udp1.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, ((interface1)+'\0').encode())
+    s_udp2 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s_udp2.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, ((interface2)+'\0').encode())
     s_tcp.connect((HOST, PORT))
-    s_udp.sendto("123".encode(), server_addr) # Required! don't comment it
+    s_udp1.sendto("123".encode(), server_addr) # Required! don't comment it
+    s_udp2.sendto("123".encode(), server_addr) # Required! don't comment it
 
-    return s_tcp, s_udp
+    return s_tcp, s_udp1, s_udp2
 
 
 
@@ -80,15 +90,17 @@ while not exitprogram:
         now = dt.datetime.today()
         n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
         # os.system("tcpdump -i any net 140.112.20.183 -w %s.pcap &"%(n))
-        s_tcp, s_udp = connection_setup()
+        s_tcp, s_udp1, s_udp2 = connection_setup()
     except Exception as inst:
         print("Error: ", inst)
         # os.system("pkill tcpdump")
         continue
     thread_stop = False
-    t = threading.Thread(target=bybass_rx, args=(s_udp, ))
-    t.start()
-    while True and t.is_alive():
+    t1 = threading.Thread(target=bybass_rx, args=(s_udp1, ))
+    t2 = threading.Thread(target=bybass_rx, args=(s_udp2, ))
+    t1.start()
+    t2.start()
+    while True and t1.is_alive() and t2.is_alive():
         x = input("Enter STOP to Stop\n")
         if x == "STOP":
             thread_stop = True
@@ -99,8 +111,10 @@ while not exitprogram:
             exitprogram = True
             s_tcp.sendall("EXIT".encode())
     thread_stop = True
-    t.join()
+    t1.join()
+    t2.join()
     s_tcp.close()
-    s_udp.close()
+    s_udp1.close()
+    s_udp2.close()
 
     # os.system("pkill tcpdump")
