@@ -24,11 +24,13 @@ buffer = queue.Queue()
 
 def connection_setup():
     interface1 = 'usb0'
-    interifcongiface2 = 'usb1'
+    interface2 = 'usb1'
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s_udp1 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    print("wait for bind to usb0...")
     s_udp1.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, ((interface1)+'\0').encode())
     s_udp2 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    print("wait for bind to usb1...")
     s_udp2.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, ((interface2)+'\0').encode())
     s_tcp.connect((HOST, PORT))
     s_udp1.sendto("123".encode(), server_addr) # Required! don't comment it
