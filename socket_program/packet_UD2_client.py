@@ -1,60 +1,51 @@
 #!/usr/bin/env python3
-
+# -*- coding: utf-8 -*-
+from ast import While
 import socket
 import time
 import threading
-import os
 import datetime as dt
+import select
+import sys
+import os
+import queue
 
-HOST = '192.168.1.248'
+HOST = '140.112.20.183'
 PORT = 3237
+PORT2 = 3238
+server_addr = (HOST, PORT)
+server_addr2 = (HOST, PORT2)
+
 thread_stop = False
 exit_program = False
 length_packet = 250
-bandwidth = 20000*1000
-total_time = 10
+bandwidth = 200*1000
+total_time = 3600
 expected_packet_per_sec = bandwidth / (length_packet << 3)
 sleeptime = 1.0 / expected_packet_per_sec
 prev_sleeptime = sleeptime
-
 pcap_path = "pcapdir"
-
-def connection():
+exitprogram = False
+def connection_setup():
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s_tcp.bind((HOST, PORT))
-    s_udp.bind((HOST, PORT))
-    s_tcp.listen()
-    print("wait for tcp connection...")
-    conn, tcp_addr = s_tcp.accept()
-    print('tcp Connected by', tcp_addr)
-    print("wait for udp say hi...")
-    indata, udp_addr = s_udp.recvfrom(1024)
-    print('udp Connected by', udp_addr)
-    print('server start at: %s:%s' % (HOST, PORT))
-    return s_tcp, s_udp, conn, tcp_addr, udp_addr
+    s_udp1 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s_udp2 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-def remote_control(conn, t):
-    global thread_stop
-    global exit_program
-    while t.is_alive():
-        try:
-            print("waiting for stopping")
-            indata, addr = conn.recvfrom(1024)
-            print('recvfrom ' + str(addr) + ': ' + indata.decode())
-            if indata == None or indata.decode() == "STOP" or addr == None:
-                thread_stop = True
-                break
-            elif indata.decode() == "EXIT":
-                thread_stop = True
-                exit_program = True
-                break
-        except Exception as inst:
-            print("Error: ", inst)
+    interface = "usb0"
+    interface2 = "usb1"
 
-def transmision(s_udp, conn, udp_addr):
-    print("start transmision to addr", udp_addr)
+    # s_udp1.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, (interface+'\0').encode())
+    # s_udp2.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, (interface2+'\0').encode())
+
+
+    s_tcp.connect((HOST, PORT))
+    s_udp1.sendto("123".encode(), server_addr) # Required! don't comment it
+    s_udp2.sendto("123".encode(), server_addr2) # Required! don't comment it
+
+    return s_tcp, s_udp1, s_udp2
+
+def transmision(s_udp):
+    print("start transmision to addr", s_udp)
     i = 0
     prev_transmit = 0
     ok = (1).to_bytes(1, 'big')
@@ -69,7 +60,8 @@ def transmision(s_udp, conn, udp_addr):
         z = i.to_bytes(8, 'big')
         redundent = os.urandom(250-8*3-1)
         outdata = datetimedec.to_bytes(8, 'big') + microsec.to_bytes(8, 'big') + z + ok +redundent
-        s_udp.sendto(outdata, udp_addr)
+        s_udp.sendto(outdata, server_addr)
+        s_udp.sendto(outdata, server_addr2)
         i += 1
         time.sleep(sleeptime)
         if time.time()-start_time > count:
@@ -85,10 +77,9 @@ def transmision(s_udp, conn, udp_addr):
     ok = (0).to_bytes(1, 'big')
     redundent = os.urandom(250-8*3-1)
     outdata = datetimedec.to_bytes(8, 'big') + microsec.to_bytes(8, 'big') + z + ok +redundent
-    s_udp.sendto(outdata, udp_addr)
+    s_udp.sendto(outdata, server_addr)
 
     print("transmit", i, "packets")
-
 
 def bybass_rx(s_udp):
     s_udp.settimeout(10)
@@ -100,6 +91,8 @@ def bybass_rx(s_udp):
     prev_capture = 0
     prev_loss = 0
     global thread_stop
+    global buffer
+    buffer = queue.Queue()
     while not thread_stop:
         try:
             indata, addr = s_udp.recvfrom(1024)
@@ -128,34 +121,50 @@ def bybass_rx(s_udp):
     print("Total capture: ", i, "Total lose: ", seq - i + 1)
     print("STOP bypass")
 
+    s_tcp.close()
+    s_udp.close()
 
 if not os.path.exists(pcap_path):
     os.system("mkdir %s"%(pcap_path))
 
 
-# os.system("kill -9 $(ps -A | grep python | awk '{print $1}')") 
 
-while not exit_program:
-
-    now = dt.datetime.today()
-    n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
-    os.system("echo wmnlab | sudo -S pkill tcpdump")
-    os.system("echo wmnlab | sudo -S tcpdump -i any port 3237 -w %s/%s.pcap&"%(pcap_path, n))
-    time.sleep(2)
-    s_tcp, s_udp, conn, tcp_addr, udp_addr = connection()
+while not exitprogram:
+    try:
+        x = input("Press Enter to start\n")
+        if x == "EXIT":
+            break
+        now = dt.datetime.today()
+        n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
+        # os.system("tcpdump -i any net 140.112.20.183 -w %s.pcap &"%(n))
+        s_tcp, s_udp1, s_udp2 = connection_setup()
+    except Exception as inst:
+        print("Error: ", inst)
+        # os.system("pkill tcpdump")
+        continue
     thread_stop = False
-    t = threading.Thread(target = transmision, args = (s_udp, conn, udp_addr))
-    t1 = threading.Thread(target = bybass_rx, args = (s_udp,))
-    t2 = threading.Thread(target = remote_control, args = (conn, t))
-
+    t = threading.Thread(target=transmision, args=(s_udp1,))
+    t1 = threading.Thread(target=bybass_rx, args=(s_udp1, ))
+    t2 = threading.Thread(target=bybass_rx, args=(s_udp2, ))
     t.start()
     t1.start()
     t2.start()
-    
+    while True and t.is_alive():
+        x = input("Enter STOP to Stop\n")
+        if x == "STOP":
+            thread_stop = True
+            s_tcp.sendall("STOP".encode())
+            break
+        elif x == "EXIT":
+            thread_stop = True
+            exitprogram = True
+            s_tcp.sendall("EXIT".encode())
+    thread_stop = True
     t.join()
     t1.join()
     t2.join()
     s_tcp.close()
-    s_udp.close()
-    conn.close()
-    os.system("echo wmnlab | sudo -S pkill tcpdump")
+    s_udp1.close()
+    s_udp2.close()
+
+    # os.system("pkill tcpdump")
