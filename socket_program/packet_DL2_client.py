@@ -23,14 +23,13 @@ exitprogram = False
 buffer = queue.Queue()
 
 
-
 def connection_setup():
+    error_count = 0
     interface1 = 'usb0'
     interface2 = 'usb1'
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s_tcp.connect((HOST, PORT))
     s_tcp.settimeout(2)
-
     s_udp1 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     print("wait for bind to usb0...")
     s_udp1.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, ((interface1)+'\0').encode())
@@ -41,24 +40,35 @@ def connection_setup():
     print("wait for establish usb1 connection...")
     s_udp1.settimeout(1)
     s_udp1.sendto("123".encode(), server_addr) # Required! don't comment it
+    indata = ""
     try:
         indata = s_tcp.recv(65535)
-    except:
-        pass
+    except Exception as inst:
+        print("Error: ", inst)
+        error_count += 1
+
     while True:
         try:
             if indata == b'PHASE2 OK':
                 print("PHASE2 OK")
                 break
-        except:
-            pass
-        print("wait for establish usb1 connection...")
+
+        except Exception as inst:
+            print("Error: ", inst)
+            error_count += 1
+
         try:
             s_udp1.sendto("123".encode(), server_addr) # Required! don't comment it
             indata = s_tcp.recv(65535)
-        except:
-            pass
-    
+
+
+        except Exception as inst:
+            print("Error: ", inst)
+            error_count += 1
+        if error_count > 5:
+            exit()
+
+
     print("wait for establish usb2 connection...")
 
     s_udp2.settimeout(1)
@@ -66,8 +76,10 @@ def connection_setup():
     s_udp2.sendto("456".encode(), server_addr2) # Required! don't comment it
     try:
         indata = s_tcp.recv(65535)
-    except:
-        pass
+
+    except Exception as inst:
+        print("Error: ", inst)
+
     while True:
         try:
             if indata == b'PHASE3 OK':
@@ -75,19 +87,25 @@ def connection_setup():
                 break
             else:
                 print("indata = ", indata)
-        except:
-            pass
+        except Exception as inst:
+            print("Error: ", inst)
+            error_count += 1
+
+
         print("wait for establish usb2 connection...")
         try:
             s_udp2.sendto("456".encode(), server_addr2) # Required! don't comment it
             indata = s_tcp.recv(65535)
-        except:
-            pass
+        except Exception as inst:
+            print("Error: ", inst)
+            error_count += 1
+        if error_count > 5:
+            exit()
 
     print("connection_setup complete")
     s_tcp.sendall(b"OK")
     return s_tcp, s_udp1, s_udp2
-
+    
 def bybass_rx(s_udp):
     s_udp.settimeout(10)
     print("wait for indata...")
