@@ -16,7 +16,9 @@ if not hasattr(socket, 'SO_BINDTODEVICE'):
 
 HOST = '140.112.20.183'
 PORT = 3237
+PORT = 3238
 server_addr = (HOST, PORT)
+server_addr2 = (HOST, PORT2)
 thread_stop = False
 exitprogram = False
 
@@ -105,7 +107,7 @@ def connection_setup():
     print("connection_setup complete")
     s_tcp.sendall(b"OK")
     return s_tcp, s_udp1, s_udp2
-    
+
 def bybass_rx(s_udp):
     s_udp.settimeout(10)
     print("wait for indata...")
