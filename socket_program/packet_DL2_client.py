@@ -22,23 +22,71 @@ exitprogram = False
 
 buffer = queue.Queue()
 
+
+
 def connection_setup():
     interface1 = 'usb0'
     interface2 = 'usb1'
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s_tcp.connect((HOST, PORT))
+    s_tcp.settimeout(2)
+
     s_udp1 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     print("wait for bind to usb0...")
     s_udp1.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, ((interface1)+'\0').encode())
     s_udp2 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     print("wait for bind to usb1...")
     s_udp2.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, ((interface2)+'\0').encode())
-    s_tcp.connect((HOST, PORT))
+
+    print("wait for establish usb1 connection...")
+    s_udp1.settimeout(1)
     s_udp1.sendto("123".encode(), server_addr) # Required! don't comment it
-    s_udp2.sendto("123".encode(), server_addr) # Required! don't comment it
+    try:
+        indata = s_tcp.recv(65535)
+    except:
+        pass
+    while True:
+        try:
+            if indata == b'PHASE2 OK':
+                print("PHASE2 OK")
+                break
+        except:
+            pass
+        print("wait for establish usb1 connection...")
+        try:
+            s_udp1.sendto("123".encode(), server_addr) # Required! don't comment it
+            indata = s_tcp.recv(65535)
+        except:
+            pass
+    
+    print("wait for establish usb2 connection...")
 
+    s_udp2.settimeout(1)
+
+    s_udp2.sendto("456".encode(), server_addr2) # Required! don't comment it
+    try:
+        indata = s_tcp.recv(65535)
+    except:
+        pass
+    while True:
+        try:
+            if indata == b'PHASE3 OK':
+                print("PHASE3 OK")
+                break
+            else:
+                print("indata = ", indata)
+        except:
+            pass
+        print("wait for establish usb2 connection...")
+        try:
+            s_udp2.sendto("456".encode(), server_addr2) # Required! don't comment it
+            indata = s_tcp.recv(65535)
+        except:
+            pass
+
+    print("connection_setup complete")
+    s_tcp.sendall(b"OK")
     return s_tcp, s_udp1, s_udp2
-
-
 
 def bybass_rx(s_udp):
     s_udp.settimeout(10)

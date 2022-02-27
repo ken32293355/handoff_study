@@ -10,40 +10,94 @@ import sys
 import os
 import queue
 
+if not hasattr(socket, 'SO_BINDTODEVICE'):
+    socket.SO_BINDTODEVICE = 25
+
 HOST = '140.112.20.183'
 PORT = 3237
 PORT2 = 3238
 server_addr = (HOST, PORT)
 server_addr2 = (HOST, PORT2)
+thread_stop = False
+exitprogram = False
 
 thread_stop = False
 exit_program = False
 length_packet = 250
 bandwidth = 200*1000
-total_time = 3600
+total_time = 10
 expected_packet_per_sec = bandwidth / (length_packet << 3)
 sleeptime = 1.0 / expected_packet_per_sec
 prev_sleeptime = sleeptime
 pcap_path = "pcapdir"
 exitprogram = False
+
+
 def connection_setup():
+    interface1 = 'usb0'
+    interface2 = 'usb1'
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s_udp1 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s_udp2 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-    interface = "usb0"
-    interface2 = "usb1"
-
-    # s_udp1.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, (interface+'\0').encode())
-    # s_udp2.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, (interface2+'\0').encode())
-
-
     s_tcp.connect((HOST, PORT))
-    s_udp1.sendto("123".encode(), server_addr) # Required! don't comment it
-    s_udp2.sendto("123".encode(), server_addr2) # Required! don't comment it
+    s_tcp.settimeout(2)
 
+    s_udp1 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    print("wait for bind to usb0...")
+    s_udp1.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, ((interface1)+'\0').encode())
+    s_udp2 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    print("wait for bind to usb1...")
+    s_udp2.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, ((interface2)+'\0').encode())
+
+    print("wait for establish usb1 connection...")
+    s_udp1.settimeout(1)
+    s_udp1.sendto("123".encode(), server_addr) # Required! don't comment it
+    try:
+        indata = s_tcp.recv(65535)
+    except:
+        pass
+    while True:
+        try:
+            if indata == b'PHASE2 OK':
+                print("PHASE2 OK")
+                break
+        except:
+            pass
+        print("wait for establish usb1 connection...")
+        try:
+            s_udp1.sendto("123".encode(), server_addr) # Required! don't comment it
+            indata = s_tcp.recv(65535)
+        except:
+            pass
+    
+    print("wait for establish usb2 connection...")
+
+    s_udp2.settimeout(1)
+
+    s_udp2.sendto("456".encode(), server_addr2) # Required! don't comment it
+    try:
+        indata = s_tcp.recv(65535)
+    except:
+        pass
+    while True:
+        try:
+            if indata == b'PHASE3 OK':
+                print("PHASE3 OK")
+                break
+            else:
+                print("indata = ", indata)
+        except:
+            pass
+        print("wait for establish usb2 connection...")
+        try:
+            s_udp2.sendto("456".encode(), server_addr2) # Required! don't comment it
+            indata = s_tcp.recv(65535)
+        except:
+            pass
+
+    print("connection_setup complete")
+    s_tcp.sendall(b"OK")
     return s_tcp, s_udp1, s_udp2
 
+    return s_tcp, s_udp1, s_udp2
 def transmision(s_udp):
     print("start transmision to addr", s_udp)
     i = 0
