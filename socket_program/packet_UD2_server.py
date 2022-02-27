@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from ast import While
+from calendar import c
 import socket
 import time
 import threading
@@ -17,7 +18,7 @@ thread_stop = False
 exit_program = False
 length_packet = 250
 bandwidth = 20000*1000
-total_time = 60
+total_time = 10
 expected_packet_per_sec = bandwidth / (length_packet << 3)
 sleeptime = 1.0 / expected_packet_per_sec
 prev_sleeptime = sleeptime
@@ -33,16 +34,71 @@ def connection():
     s_tcp.bind((HOST, PORT))
     s_udp1.bind((HOST, PORT))
     s_udp2.bind((HOST, PORT2))
-    s_tcp.listen()
+    s_udp1.settimeout(2)
+    s_udp2.settimeout(2)
+    print('server start at: %s:%s' % (HOST, PORT))
+
+    ### PHASE1 TCP connection establishment
+
     print("wait for tcp connection...")
+    s_tcp.listen(1)
     conn, tcp_addr = s_tcp.accept()
     print('tcp Connected by', tcp_addr)
-    print("wait for udp say hi...")
-    indata, udp_addr1 = s_udp1.recvfrom(1024)
-    print('udp Connected by', udp_addr1)
-    indata, udp_addr2 = s_udp2.recvfrom(1024)
-    print('udp Connected by', udp_addr2)
-    print('server start at: %s:%s' % (HOST, PORT))
+
+
+    ### PHASE2 UDP1 connection establishment
+
+    print("wait for udp1 say 123...")
+    try:
+        indata, udp_addr1 = s_udp1.recvfrom(1024)
+    except:
+        pass
+    while True:
+        try:
+            if indata.decode() == "123":
+                conn.sendall(b"PHASE2 OK")
+                break
+        except:
+            pass
+        indata, udp_addr1 = s_udp1.recvfrom(1024)
+    
+    print('udp1 Connected by', udp_addr1)
+    print('udp1 say', indata)
+
+
+    ### PHASE3 UDP2 connection establishment
+
+
+    print("wait for udp2 say 456...")
+    try:
+        indata, udp_addr2 = s_udp2.recvfrom(1024)
+    except:
+        pass
+    while True:
+        try:
+            if indata.decode() == "456":
+                conn.sendall(b"PHASE3 OK")
+                break
+            else:
+                print("udp2 get", indata)
+        except:
+            pass
+        try:
+            print("wait for udp2 say 456...")
+            indata, udp_addr2 = s_udp2.recvfrom(1024)
+        except:
+            pass
+    print('udp2 Connected by', udp_addr2)
+    print('udp2 say', indata)
+    try:
+        indata = conn.recv(65535)
+        if indata == b'OK':
+            print("connection setup complete")
+        else:
+            print("connection setup fail")
+            return 0
+    except:
+        exit(1)
     return s_tcp, s_udp1, s_udp2, conn, tcp_addr, udp_addr1, udp_addr2
 
 def remote_control(conn, t):
@@ -53,7 +109,7 @@ def remote_control(conn, t):
             print("waiting for stopping")
             indata, addr = conn.recvfrom(1024)
             print('recvfrom ' + str(addr) + ': ' + indata.decode())
-            if indata == None or indata.decode() == "STOP":
+            if not indata or indata.decode() == "STOP" or not addr:
                 thread_stop = True
                 break
             elif indata.decode() == "EXIT":
@@ -62,9 +118,9 @@ def remote_control(conn, t):
                 break
         except Exception as inst:
             print("Error: ", inst)
-
+    print("STOP remote control")
 def bybass_rx(s_udp):
-    s_udp.settimeout(10)
+    s_udp.settimeout(3)
     print("wait for indata...")
     i = 0
     start_time = time.time()
