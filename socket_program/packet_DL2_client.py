@@ -16,7 +16,7 @@ if not hasattr(socket, 'SO_BINDTODEVICE'):
 
 HOST = '140.112.20.183'
 PORT = 3237
-PORT = 3238
+PORT2 = 3238
 server_addr = (HOST, PORT)
 server_addr2 = (HOST, PORT2)
 thread_stop = False
