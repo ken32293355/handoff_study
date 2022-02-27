@@ -95,7 +95,6 @@ def connection():
         exit(1)
     return s_tcp, s_udp1, s_udp2, conn, tcp_addr, udp_addr1, udp_addr2
 
-
 def remote_control(conn, t):
     global thread_stop
     global exit_program
