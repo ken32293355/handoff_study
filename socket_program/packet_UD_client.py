@@ -31,6 +31,7 @@ def connection_setup():
     s_tcp.connect((HOST, PORT))
     # s_udp.sendto("123".encode(), server_addr) # Required! don't comment it
 
+    s_udp.settimeout(0)
 
     print("wait for establish udp connection...")
     s_udp.settimeout(1)
@@ -101,7 +102,7 @@ def transmision(s_udp):
     print("transmit", i, "packets")
 
 def bybass_rx(s_udp):
-    s_udp.settimeout(10)
+    s_udp.settimeout(3)
     print("wait for indata...")
     i = 0
     start_time = time.time()
@@ -134,6 +135,7 @@ def bybass_rx(s_udp):
                 prev_capture = i
         except Exception as inst:
             print("Error: ", inst)
+            thread_stop = True
     thread_stop = True
     print("[%d-%d]"%(count-1, count), "capture", i-prev_capture, "loss", seq-i+1-prev_loss, sep='\t')
     print("---Experiment Complete---")

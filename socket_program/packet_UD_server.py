@@ -26,8 +26,9 @@ total_time = 3600
 expected_packet_per_sec = bandwidth / (length_packet << 3)
 sleeptime = 1.0 / expected_packet_per_sec
 prev_sleeptime = sleeptime
-
 pcap_path = "pcapdir"
+
+hostname = str(PORT) + ":"
 
 def connection():
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -46,19 +47,29 @@ def connection():
     # print('udp Connected by', udp_addr)
     # print('server start at: %s:%s' % (HOST, PORT))
 
+    ###
+    s_udp.settimeout(0)
+    print("reading trash...")
+    while True:
+        try:
+            print("reading trash...")
+            indata, udp_addr = s_udp.recvfrom(1024)
+        except:
+            break
 
+    s_udp.settimeout(3)
 
     ### PHASE1 TCP connection establishment
 
-    print("wait for tcp connection...")
+    print(hostname, "wait for tcp connection...")
     s_tcp.listen(1)
     conn, tcp_addr = s_tcp.accept()
-    print('tcp Connected by', tcp_addr)
+    print(hostname, 'tcp Connected by', tcp_addr)
 
 
     ### PHASE2 UDP1 connection establishment
 
-    print("wait for udp say 123...")
+    print(hostname, "wait for udp say 123...")
     try:
         indata, udp_addr = s_udp.recvfrom(1024)
     except:
@@ -68,12 +79,18 @@ def connection():
             if indata.decode() == "123":
                 conn.sendall(b"PHASE2 OK")
                 break
+
+            else:
+                print("get", indata.decode(), "wrong")
+        except Exception as inst:
+            print("Error: ", inst)
+        try:
+            indata, udp_addr = s_udp.recvfrom(1024)
         except:
             pass
-        indata, udp_addr = s_udp.recvfrom(1024)
-    
     print('udp Connected by', udp_addr)
     print('udp say', indata)
+    print("wait for client say OK...")
 
     try:
         indata = conn.recv(65535)
@@ -127,7 +144,7 @@ def transmision(s_udp, conn, udp_addr):
         i += 1
         time.sleep(sleeptime)
         if time.time()-start_time > count:
-            print("[%d-%d]"%(count-1, count), "transmit", i-prev_transmit)
+            #print("[%d-%d]"%(count-1, count), "transmit", i-prev_transmit)
             count += 1
             sleeptime = prev_sleeptime / expected_packet_per_sec * (i-prev_transmit) # adjust sleep time dynamically
             prev_transmit = i
@@ -145,7 +162,7 @@ def transmision(s_udp, conn, udp_addr):
 
 
 def bybass_rx(s_udp):
-    s_udp.settimeout(10)
+    s_udp.settimeout(3)
     print("wait for indata...")
     i = 0
     start_time = time.time()
@@ -196,7 +213,11 @@ while not exit_program:
     os.system("echo wmnlab | sudo -S pkill tcpdump")
     os.system("echo wmnlab | sudo -S tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT, pcap_path,PORT, n))
     time.sleep(2)
-    s_tcp, s_udp, conn, tcp_addr, udp_addr = connection()
+    try:
+        s_tcp, s_udp, conn, tcp_addr, udp_addr = connection()
+    except Exception as inst:
+        print("Connection Error:", inst)
+        continue
     thread_stop = False
     t = threading.Thread(target = transmision, args = (s_udp, conn, udp_addr))
     t1 = threading.Thread(target = bybass_rx, args = (s_udp,))
@@ -210,6 +231,17 @@ while not exit_program:
     t1.join()
     t2.join()
     s_tcp.close()
+
+    s_udp.settimeout(0)
+    print("reading trash...")
+    while True:
+        try:
+            print("reading trash...")
+            indata, udp_addr = s_udp.recvfrom(1024)
+        except:
+            break
+
+
     s_udp.close()
     conn.close()
     os.system("echo wmnlab | sudo -S pkill tcpdump")
