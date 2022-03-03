@@ -35,14 +35,16 @@ def connection():
     s_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s_tcp.bind((HOST, PORT))
     s_udp.bind((HOST, PORT))
-    s_tcp.listen()
-    print("wait for tcp connection...")
-    conn, tcp_addr = s_tcp.accept()
-    print('tcp Connected by', tcp_addr)
-    print("wait for udp say hi...")
-    indata, udp_addr = s_udp.recvfrom(1024)
-    print('udp Connected by', udp_addr)
-    print('server start at: %s:%s' % (HOST, PORT))
+
+    udp_addr = ""
+    # s_tcp.listen()
+    # print("wait for tcp connection...")
+    # conn, tcp_addr = s_tcp.accept()
+    # print('tcp Connected by', tcp_addr)
+    # print("wait for udp say hi...")
+    # indata, udp_addr = s_udp.recvfrom(1024)
+    # print('udp Connected by', udp_addr)
+    # print('server start at: %s:%s' % (HOST, PORT))
 
 
 
@@ -58,7 +60,7 @@ def connection():
 
     print("wait for udp say 123...")
     try:
-        indata, udp_addr1 = s_udp.recvfrom(1024)
+        indata, udp_addr = s_udp.recvfrom(1024)
     except:
         pass
     while True:
@@ -68,9 +70,9 @@ def connection():
                 break
         except:
             pass
-        indata, udp_addr1 = s_udp.recvfrom(1024)
+        indata, udp_addr = s_udp.recvfrom(1024)
     
-    print('udp Connected by', udp_addr1)
+    print('udp Connected by', udp_addr)
     print('udp say', indata)
 
     try:

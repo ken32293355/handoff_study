@@ -155,11 +155,11 @@ while not exitprogram:
             break
         now = dt.datetime.today()
         n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
-        # os.system("tcpdump -i any net 140.112.20.183 -w %s.pcap &"%(n))
+        os.system("tcpdump -i any net 140.112.20.183 -w %s/%s.pcap &"%(pcap_path,n))
         s_tcp, s_udp = connection_setup()
     except Exception as inst:
         print("Error: ", inst)
-        # os.system("pkill tcpdump")
+        os.system("pkill tcpdump")
         continue
     thread_stop = False
     t = threading.Thread(target=transmision, args=(s_udp, ))
@@ -181,4 +181,4 @@ while not exitprogram:
     s_tcp.close()
     s_udp.close()
 
-    # os.system("pkill tcpdump")
+    os.system("pkill tcpdump")
