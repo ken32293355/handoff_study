@@ -5,14 +5,24 @@ import time
 import threading
 import os
 import datetime as dt
+import argparse
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-p", "--port", type=int,
+                    help="port to bind", default=3237)
+args = parser.parse_args()
+print(args.port)
+
+
 
 HOST = '192.168.1.248'
-PORT = 3237
+PORT = args.port
 thread_stop = False
 exit_program = False
 length_packet = 250
-bandwidth = 20000*1000
-total_time = 10
+bandwidth = 2000*1000
+total_time = 3600
 expected_packet_per_sec = bandwidth / (length_packet << 3)
 sleeptime = 1.0 / expected_packet_per_sec
 prev_sleeptime = sleeptime
@@ -33,6 +43,47 @@ def connection():
     indata, udp_addr = s_udp.recvfrom(1024)
     print('udp Connected by', udp_addr)
     print('server start at: %s:%s' % (HOST, PORT))
+
+
+
+    ### PHASE1 TCP connection establishment
+
+    print("wait for tcp connection...")
+    s_tcp.listen(1)
+    conn, tcp_addr = s_tcp.accept()
+    print('tcp Connected by', tcp_addr)
+
+
+    ### PHASE2 UDP1 connection establishment
+
+    print("wait for udp say 123...")
+    try:
+        indata, udp_addr1 = s_udp.recvfrom(1024)
+    except:
+        pass
+    while True:
+        try:
+            if indata.decode() == "123":
+                conn.sendall(b"PHASE2 OK")
+                break
+        except:
+            pass
+        indata, udp_addr1 = s_udp.recvfrom(1024)
+    
+    print('udp Connected by', udp_addr1)
+    print('udp say', indata)
+
+    try:
+        indata = conn.recv(65535)
+        if indata == b'OK':
+            print("connection setup complete")
+        else:
+            print("connection setup fail")
+            return 0
+    except:
+        exit(1)
+
+
     return s_tcp, s_udp, conn, tcp_addr, udp_addr
 
 def remote_control(conn, t):
@@ -43,7 +94,7 @@ def remote_control(conn, t):
             print("waiting for stopping")
             indata, addr = conn.recvfrom(1024)
             print('recvfrom ' + str(addr) + ': ' + indata.decode())
-            if indata == None or indata.decode() == "STOP" or addr == None:
+            if not indata or indata.decode() == "STOP" or not addr:
                 thread_stop = True
                 break
             elif indata.decode() == "EXIT":
@@ -52,6 +103,7 @@ def remote_control(conn, t):
                 break
         except Exception as inst:
             print("Error: ", inst)
+    print("STOP remote control")
 
 def transmision(s_udp, conn, udp_addr):
     print("start transmision to addr", udp_addr)
@@ -140,7 +192,7 @@ while not exit_program:
     now = dt.datetime.today()
     n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
     os.system("echo wmnlab | sudo -S pkill tcpdump")
-    os.system("echo wmnlab | sudo -S tcpdump -i any port 3237 -w %s/%s.pcap&"%(pcap_path, n))
+    os.system("echo wmnlab | sudo -S tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT, pcap_path,PORT, n))
     time.sleep(2)
     s_tcp, s_udp, conn, tcp_addr, udp_addr = connection()
     thread_stop = False

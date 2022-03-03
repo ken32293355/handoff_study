@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 from ast import While
 import socket
 import time
@@ -18,7 +19,7 @@ thread_stop = False
 exit_program = False
 length_packet = 250
 bandwidth = 200*1000
-total_time = 10
+total_time = 3600
 expected_packet_per_sec = bandwidth / (length_packet << 3)
 sleeptime = 1.0 / expected_packet_per_sec
 prev_sleeptime = sleeptime
@@ -28,7 +29,38 @@ def connection_setup():
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s_tcp.connect((HOST, PORT))
+    # s_udp.sendto("123".encode(), server_addr) # Required! don't comment it
+
+
+    print("wait for establish udp connection...")
+    s_udp.settimeout(1)
     s_udp.sendto("123".encode(), server_addr) # Required! don't comment it
+    indata = ""
+    try:
+        indata = s_tcp.recv(65535)
+    except Exception as inst:
+        print("Error: ", inst)
+
+    while True:
+        try:
+            if indata == b'PHASE2 OK':
+                print("PHASE2 OK")
+                break
+
+        except Exception as inst:
+            print("Error: ", inst)
+
+        try:
+            s_udp.sendto("123".encode(), server_addr) # Required! don't comment it
+            indata = s_tcp.recv(65535)
+
+
+        except Exception as inst:
+            print("Error: ", inst)
+
+    print("connection_setup complete")
+    s_tcp.sendall(b"OK")
+
 
     return s_tcp, s_udp
 
