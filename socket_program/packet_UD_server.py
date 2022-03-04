@@ -86,8 +86,8 @@ def connection():
             print("Error: ", inst)
         try:
             indata, udp_addr = s_udp.recvfrom(1024)
-        except:
-            pass
+        except Exception as inst:
+            print("Error: ", inst)
     print('udp Connected by', udp_addr)
     print('udp say', indata)
     print("wait for client say OK...")
