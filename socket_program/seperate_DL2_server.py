@@ -25,7 +25,7 @@ PORT2 = 3238
 thread_stop = False
 exit_program = False
 length_packet = 250
-bandwidth = 20000*1000
+bandwidth = 200*1000
 total_time = 10
 expected_packet_per_sec = bandwidth / (length_packet << 3)
 sleeptime = 1.0 / expected_packet_per_sec
@@ -93,7 +93,7 @@ def connection(host, port, result):
     try:
         indata = conn.recv(65535)
         if indata == b'OK':
-            print("connection setup complete")
+            print(hostname, "connection setup complete")
         else:
             print("connection setup fail")
             return 0
@@ -123,6 +123,7 @@ def remote_control(conn, t):
     print("STOP remote control")
 
 def transmision(s_udp1, s_udp2, udp_addr1, udp_addr2):
+    global thread_stop
     print("start transmision to addr:%s and addr:%s"%(udp_addr1, udp_addr2))
     i = 0
     prev_transmit = 0
@@ -182,14 +183,16 @@ while not exitprogram:
         connection_t2.join()
         print(result1)
         print(result2)
-        s_tcp1, s_udp1, conn1, tcp_addr1, udp_addr1 = result1
-        s_tcp2, s_udp2, conn2, tcp_addr2, udp_addr2 = result2
+        s_tcp1, s_udp1, conn1, tcp_addr1, udp_addr1 = result1[0]
+        s_tcp2, s_udp2, conn2, tcp_addr2, udp_addr2 = result2[0]
     except Exception as inst:
         print("Error: ", inst)
         tcpproc1.terminate()
         tcpproc2.terminate()
         continue
     print("connect two UE suceed")
+    conn1.sendall("START")
+    conn2.sendall("START")
     thread_stop = False
     t4 = threading.Thread(target = transmision, args = (s_udp1, s_udp2, udp_addr1, udp_addr2))
     t2 = threading.Thread(target = remote_control, args = (conn1, t4))

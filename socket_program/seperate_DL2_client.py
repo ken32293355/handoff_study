@@ -29,10 +29,8 @@ def connection_setup():
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s_tcp.connect((HOST, PORT))
-    # s_udp.sendto("123".encode(), server_addr) # Required! don't comment it
-
+    s_tcp.settimeout(10)
     s_udp.settimeout(0)
-
     print("wait for establish udp connection...")
     s_udp.settimeout(1)
     s_udp.sendto("123".encode(), server_addr) # Required! don't comment it
@@ -62,6 +60,20 @@ def connection_setup():
     print("connection_setup complete")
     s_tcp.sendall(b"OK")
 
+    try:
+        indata = s_tcp.recv(65535)
+    except Exception as inst:
+        print("Error: ", inst)
+
+    while True:
+        print("wait for starting...")
+        try:
+            if indata == b'START':
+                print("START")
+                break
+
+        except Exception as inst:
+            print("Error: ", inst)
 
     return s_tcp, s_udp
 
