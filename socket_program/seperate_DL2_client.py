@@ -132,7 +132,7 @@ while not exitprogram:
     thread_stop = False
     t2 = threading.Thread(target=bybass_rx, args=(s_udp, ))
     t2.start()
-    while True and t.is_alive():
+    while True and t2.is_alive():
         x = input("Enter STOP to Stop\n")
         if x == "STOP":
             thread_stop = True

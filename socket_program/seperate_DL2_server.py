@@ -180,6 +180,8 @@ while not exitprogram:
         connection_t2.start()
         connection_t1.join()
         connection_t2.join()
+        print(result1)
+        print(result2)
         s_tcp1, s_udp1, conn1, tcp_addr1, udp_addr1 = result1
         s_tcp2, s_udp2, conn2, tcp_addr2, udp_addr2 = result2
     except Exception as inst:
