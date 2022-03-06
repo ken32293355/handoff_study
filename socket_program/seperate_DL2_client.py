@@ -74,6 +74,7 @@ def connection_setup():
 
         except Exception as inst:
             print("Error: ", inst)
+        indata = s_tcp.recv(65535)
 
     return s_tcp, s_udp
 

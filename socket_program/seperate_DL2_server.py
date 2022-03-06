@@ -26,7 +26,7 @@ thread_stop = False
 exit_program = False
 length_packet = 250
 bandwidth = 200*1000
-total_time = 10
+total_time = 3600
 expected_packet_per_sec = bandwidth / (length_packet << 3)
 sleeptime = 1.0 / expected_packet_per_sec
 prev_sleeptime = sleeptime
@@ -181,8 +181,6 @@ while not exitprogram:
         connection_t2.start()
         connection_t1.join()
         connection_t2.join()
-        print(result1)
-        print(result2)
         s_tcp1, s_udp1, conn1, tcp_addr1, udp_addr1 = result1[0]
         s_tcp2, s_udp2, conn2, tcp_addr2, udp_addr2 = result2[0]
     except Exception as inst:
@@ -191,17 +189,20 @@ while not exitprogram:
         tcpproc2.terminate()
         continue
     print("connect two UE suceed")
-    conn1.sendall("START")
-    conn2.sendall("START")
+    conn1.sendall(b"START")
+    conn2.sendall(b"START")
     thread_stop = False
     t4 = threading.Thread(target = transmision, args = (s_udp1, s_udp2, udp_addr1, udp_addr2))
     t2 = threading.Thread(target = remote_control, args = (conn1, t4))
-    t2.start()
+    t3 = threading.Thread(target = remote_control, args = (conn2, t4))
     t4.start()
-    
+    t2.start()
+    t3.start()
+    t3.join()
     t2.join()
     t4.join()
     s_tcp1.close()
+    s_tcp2.close()
     s_udp1.close()
     s_udp2.close()
     conn1.close()
