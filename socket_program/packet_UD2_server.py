@@ -49,18 +49,14 @@ def connection():
     ### PHASE2 UDP1 connection establishment
 
     print("wait for udp1 say 123...")
-    try:
-        indata, udp_addr1 = s_udp1.recvfrom(1024)
-    except:
-        pass
     while True:
         try:
+            indata, udp_addr1 = s_udp1.recvfrom(1024)
             if indata.decode() == "123":
                 conn.sendall(b"PHASE2 OK")
                 break
         except:
             pass
-        indata, udp_addr1 = s_udp1.recvfrom(1024)
     
     print('udp1 Connected by', udp_addr1)
     print('udp1 say', indata)
@@ -70,12 +66,10 @@ def connection():
 
 
     print("wait for udp2 say 456...")
-    try:
-        indata, udp_addr2 = s_udp2.recvfrom(1024)
-    except:
-        pass
+
     while True:
         try:
+            indata, udp_addr2 = s_udp2.recvfrom(1024)
             if indata.decode() == "456":
                 conn.sendall(b"PHASE3 OK")
                 break

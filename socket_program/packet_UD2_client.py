@@ -46,14 +46,10 @@ def connection_setup():
     s_udp1.settimeout(1)
     s_udp1.sendto("123".encode(), server_addr) # Required! don't comment it
     indata = ""
-    try:
-        indata = s_tcp.recv(65535)
-    except Exception as inst:
-        print("Error: ", inst)
-        error_count += 1
 
     while True:
         try:
+            indata = s_tcp.recv(65535)
             if indata == b'PHASE2 OK':
                 print("PHASE2 OK")
                 break
@@ -79,14 +75,12 @@ def connection_setup():
     s_udp2.settimeout(1)
 
     s_udp2.sendto("456".encode(), server_addr2) # Required! don't comment it
-    try:
-        indata = s_tcp.recv(65535)
 
-    except Exception as inst:
-        print("Error: ", inst)
 
     while True:
         try:
+            indata = s_tcp.recv(65535)
+
             if indata == b'PHASE3 OK':
                 print("PHASE3 OK")
                 break

@@ -60,21 +60,17 @@ def connection_setup():
     print("connection_setup complete")
     s_tcp.sendall(b"OK")
 
-    try:
-        indata = s_tcp.recv(65535)
-    except Exception as inst:
-        print("Error: ", inst)
 
     while True:
         print("wait for starting...")
         try:
+            indata = s_tcp.recv(65535)
             if indata == b'START':
                 print("START")
                 break
 
         except Exception as inst:
             print("Error: ", inst)
-        indata = s_tcp.recv(65535)
 
     return s_tcp, s_udp
 
