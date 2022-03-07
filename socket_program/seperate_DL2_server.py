@@ -14,14 +14,17 @@ import argparse
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-p", "--port", type=int,
+parser.add_argument("-p1", "--port1", type=int,
                     help="port to bind", default=3237)
-args = parser.parse_args()
+parser.add_argument("-p2", "--port2", type=int,
+                    help="port to bind", default=3238)
 
+args = parser.parse_args()
+print(args.port1, args.port2)
 
 HOST = '192.168.1.248'
-PORT = 3237
-PORT2 = 3238
+PORT = args.port1
+PORT2 = args.port2
 thread_stop = False
 exit_program = False
 length_packet = 250
