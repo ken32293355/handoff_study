@@ -15,6 +15,7 @@ HOST = '140.112.20.183'
 f = open("port.txt", "r")
 l = f.readline()
 PORT = int(l)
+print("my port", port)
 server_addr = (HOST, PORT)
 
 
