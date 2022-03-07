@@ -13,16 +13,21 @@ import queue
 import subprocess
 import argparse
 
-
 parser = argparse.ArgumentParser()
-parser.add_argument("-p", "--port", type=int,
+parser.add_argument("-p1", "--port1", type=int,
                     help="port to bind", default=3237)
+parser.add_argument("-p2", "--port2", type=int,
+                    help="port to bind", default=3238)
+
 args = parser.parse_args()
+print(args.port1, args.port2)
+
+
 
 
 HOST = '192.168.1.248'
-PORT = 3237
-PORT2 = 3238
+PORT = args.port1
+PORT2 = args.port2
 thread_stop = False
 exit_program = False
 length_packet = 250
@@ -36,6 +41,7 @@ thread_stop = False
 exitprogram = False
 pcap_path = "pcapdir"
 hostname = str(PORT) + ":"
+
 
 def connection(host, port, result):
     assert(result[0] == None)
@@ -230,8 +236,8 @@ while not exitprogram:
     conn2.sendall(b"START")
     thread_stop = False
     t4 = threading.Thread(target = transmision, args = (s_udp1, s_udp2, udp_addr1, udp_addr2))
-    t5 = threading.Thread(target = bybass_rx, args = (s_udp1))
-    t6 = threading.Thread(target = bybass_rx, args = (s_udp2))
+    t5 = threading.Thread(target = bybass_rx, args = (s_udp1,))
+    t6 = threading.Thread(target = bybass_rx, args = (s_udp2,))
     t2 = threading.Thread(target = remote_control, args = (conn1, t4))
     t3 = threading.Thread(target = remote_control, args = (conn2, t4))
     t4.start()

@@ -12,7 +12,12 @@ import os
 import queue
 
 HOST = '140.112.20.183'
-PORT = 3237
+
+f = open("port.txt", "r")
+l = f.readline()
+PORT = int(l)
+
+
 server_addr = (HOST, PORT)
 
 thread_stop = False
