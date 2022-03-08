@@ -121,10 +121,10 @@ def remote_control(conn, t):
             if not indata or indata.decode() == "STOP" or not addr:
                 thread_stop = True
                 break
-            elif indata.decode() == "EXIT":
-                thread_stop = True
-                exit_program = True
-                break
+            # elif indata.decode() == "EXIT":
+            #     thread_stop = True
+            #     exit_program = True
+            #     break
         except Exception as inst:
             print("Error: ", inst)
     print("STOP remote control")
@@ -151,7 +151,7 @@ def transmision(s_udp1, s_udp2, udp_addr1, udp_addr2):
         i += 1
         time.sleep(sleeptime)
         if time.time()-start_time > count:
-            print("[%d-%d]"%(count-1, count), "transmit", i-prev_transmit)
+            #print("[%d-%d]"%(count-1, count), "transmit", i-prev_transmit)
             count += 1
             sleeptime = prev_sleeptime / expected_packet_per_sec * (i-prev_transmit) # adjust sleep time dynamically
             prev_transmit = i
@@ -193,7 +193,7 @@ def bybass_rx(s_udp):
             else:
                 i += 1
             if time.time()-start_time > count:
-                print("[%d-%d]"%(count-1, count), "capture", i-prev_capture, "loss", seq-i+1-prev_loss, sep='\t')
+                #print("[%d-%d]"%(count-1, count), "capture", i-prev_capture, "loss", seq-i+1-prev_loss, sep='\t')
                 prev_loss += seq-i+1-prev_loss
                 count += 1
                 prev_capture = i

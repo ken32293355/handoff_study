@@ -147,8 +147,6 @@ def bybass_rx(s_udp):
     print("Total capture: ", i, "Total lose: ", seq - i + 1)
     print("STOP bypass")
 
-    s_tcp.close()
-    s_udp.close()
 
 if not os.path.exists(pcap_path):
     os.system("mkdir %s"%(pcap_path))

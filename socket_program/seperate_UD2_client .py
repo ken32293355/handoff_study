@@ -125,8 +125,6 @@ def bybass_rx(s_udp):
     print("Total capture: ", i, "Total lose: ", seq - i + 1)
     print("STOP bypass")
 
-    s_tcp.close()
-    s_udp.close()
 
 def transmision(s_udp):
     # print("start transmision to addr", s_udp)

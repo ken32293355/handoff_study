@@ -108,10 +108,10 @@ def remote_control(conn, t):
             if not indata or indata.decode() == "STOP" or not addr:
                 thread_stop = True
                 break
-            elif indata.decode() == "EXIT":
-                thread_stop = True
-                exit_program = True
-                break
+            # elif indata.decode() == "EXIT":
+            #     thread_stop = True
+            #     exit_program = True
+            #     break
         except Exception as inst:
             print("Error: ", inst)
     print("STOP remote control")
