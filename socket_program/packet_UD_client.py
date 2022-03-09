@@ -154,6 +154,8 @@ if not os.path.exists(pcap_path):
 
 
 while not exitprogram:
+    os.system("pkill tcpdump")
+
     try:
         x = input("Press Enter to start\n")
         if x == "EXIT":
@@ -171,19 +173,26 @@ while not exitprogram:
     t2 = threading.Thread(target=bybass_rx, args=(s_udp, ))
     t.start()
     t2.start()
-    while True and t.is_alive():
-        x = input("Enter STOP to Stop\n")
-        if x == "STOP":
-            thread_stop = True
-            s_tcp.sendall("STOP".encode())
-            break
-        elif x == "EXIT":
-            thread_stop = True
-            exitprogram = True
-            s_tcp.sendall("EXIT".encode())
-    thread_stop = True
-    t.join()
-    s_tcp.close()
-    s_udp.close()
+    try:
 
-    os.system("pkill tcpdump")
+        while True and t.is_alive():
+            x = input("Enter STOP to Stop\n")
+            if x == "STOP":
+                thread_stop = True
+                s_tcp.sendall("STOP".encode())
+                break
+            elif x == "EXIT":
+                thread_stop = True
+                exitprogram = True
+                s_tcp.sendall("EXIT".encode())
+        thread_stop = True
+        t.join()
+        s_tcp.close()
+        s_udp.close()
+
+
+    except Exception as inst:
+        print("Error: ", inst)
+        
+    finally:
+        os.system("pkill tcpdump")

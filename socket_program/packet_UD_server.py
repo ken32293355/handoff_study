@@ -206,7 +206,7 @@ while not exit_program:
     #os.system("echo wmnlab | sudo -S pkill tcpdump")
     # os.system("echo wmnlab | sudo -S tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT, pcap_path,PORT, n))
     tcpproc =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT, pcap_path,PORT, n)], shell=True)
-    time.sleep(2)
+    time.sleep(1)
     try:
         s_tcp, s_udp, conn, tcp_addr, udp_addr = connection()
     except Exception as inst:

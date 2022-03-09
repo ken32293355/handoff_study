@@ -212,7 +212,7 @@ while not exitprogram:
     n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
     tcpproc1 =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT, pcap_path,PORT, n)], shell=True)
     tcpproc2 =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT2, pcap_path,PORT2, n)], shell=True)
-    time.sleep(2)
+    time.sleep(1)
     # s_tcp1, s_udp1, conn1, tcp_addr1, udp_addr1 = connection()
     # s_tcp2, s_udp2, conn2, tcp_addr2, udp_addr2 = connection()
     result1 = [None]
