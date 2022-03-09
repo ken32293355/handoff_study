@@ -189,18 +189,28 @@ while not exitprogram:
     t1 = threading.Thread(target=transmision, args=(s_udp, ))
     t2.start()
     t1.start()
-    while True and t2.is_alive():
-        x = input("Enter STOP to Stop\n")
-        if x == "STOP":
-            thread_stop = True
-            s_tcp.sendall("STOP".encode())
-            break
-        elif x == "EXIT":
-            thread_stop = True
-            exitprogram = True
-            s_tcp.sendall("EXIT".encode())
-    thread_stop = True
-    s_tcp.close()
-    s_udp.close()
-    tcpproc.terminate()
-    # os.system("pkill tcpdump")
+    try:
+
+        while True and t.is_alive():
+            x = input("Enter STOP to Stop\n")
+            if x == "STOP":
+                thread_stop = True
+                s_tcp.sendall("STOP".encode())
+                break
+            elif x == "EXIT":
+                thread_stop = True
+                exitprogram = True
+                s_tcp.sendall("EXIT".encode())
+        thread_stop = True
+        t1.join()
+        t2.join()
+        s_tcp.close()
+        s_udp.close()
+
+
+    except Exception as inst:
+    
+        print("Error: ", inst)
+
+    finally:
+        os.system("pkill tcpdump")
