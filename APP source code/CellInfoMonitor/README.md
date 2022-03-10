@@ -4,6 +4,7 @@ cellInfoMonitor 的安裝檔放 cellInfoMonitor 資料夾中的 `app\build\outpu
 
 安裝後須先允許應用程式的權限。
 
+![alt text] (https://github.com/ken32293355/handoff_study/blob/jason/APP%20source%20code/CellInfoMonitor/Picture1.jpg?raw=true)
 
 #### 修改
 完整的原始程式存放在名為 cellInfoMonitor 的 project 資料夾中。如果需要更改原始程式，則需要先安裝 visual studio 再進行修改。
