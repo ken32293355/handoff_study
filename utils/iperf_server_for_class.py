@@ -15,9 +15,9 @@ if __name__ == '__main__':
     print("All supported port: 3200-3300, odd number for Uplink, even number for Downlink. ")
     print("------------------------------")
     print("You may type: ")
-    print("(2) \'python3 iperf_server.py start 3231\'")
+    print("(1) \'python3 iperf_server.py start 3231\'")
     print("     to open port 3231-3232. ")
-    print("(3) \'python3 iperf_server.py start 3235 3237 3231\'")
+    print("(2) \'python3 iperf_server.py start 3235 3237 3231\'")
     print("     to open port 3231-3232 & 3235-3238. ")
     print("------------------------------")
 
@@ -40,25 +40,32 @@ if __name__ == '__main__':
             for i in range(2, len(sys.argv)): 
                 _l.append('iperf3 -s -B 0.0.0.0 -p {} -V --logfile '.format(int(sys.argv[i]))   + os.path.join('..', 'serverlog', n + '_serverLog_{}_UL.log'.format(int(sys.argv[i]))  ))
                 _l.append('iperf3 -s -B 0.0.0.0 -p {} -V --logfile '.format(int(sys.argv[i])+1) + os.path.join('..', 'serverlog', n + '_serverLog_{}_DL.log'.format(int(sys.argv[i])+1)))
-            _l.append('echo wmnlab | sudo -S su')
+            
             for i in range(2, len(sys.argv)): 
-                _l.append('echo wmnlab | sudo tcpdump port {} -w '.format(int(sys.argv[i]))   + os.path.join('..', 'tcpdump', n + '_serverDump_{}_UL.pcap'.format(int(sys.argv[i]))  ))
-                _l.append('echo wmnlab | sudo tcpdump port {} -w '.format(int(sys.argv[i])+1) + os.path.join('..', 'tcpdump', n + '_serverDump_{}_DL.pcap'.format(int(sys.argv[i])+1)))
+                _l.append('sudo tcpdump port {} -w '.format(int(sys.argv[i]))   + os.path.join('..', 'tcpdump', n + '_serverDump_{}_UL.pcap'.format(int(sys.argv[i]))  ))
+                _l.append('sudo tcpdump port {} -w '.format(int(sys.argv[i])+1) + os.path.join('..', 'tcpdump', n + '_serverDump_{}_DL.pcap'.format(int(sys.argv[i])+1)))
             for l in _l: 
                 print(l)
-                run_store = subprocess.Popen(l + '&', shell=True)
+                run_store = subprocess.Popen(l.split(" "), preexec_fn=os.setpgrp)
                 run_list.append(run_store)
                 
             while True:
-                time.sleep(0.1)
+                time.sleep(3)
                 s = input("Enter \'STOP\' to stop: ")
                 time.sleep(0.1)
                 if s == 'STOP':
                     break
             
             for run_item in run_list:
-                subprocess.Popen.kill(run_item)
+                try:
+                    print(run_item, ", PID: ", run_item.pid)
             
+                    pgid = os.getpgid(run_item.pid)
+                    
+                    command = "sudo kill -9 -{}".format(pgid)
+                    subprocess.check_output(command.split(" "))
+                except Exception as e:
+                    print(e)
         else: 
             print("Error: You can only specify \'start\' followed with a list of specified ports. ")
 
