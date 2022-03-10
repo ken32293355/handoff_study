@@ -1,8 +1,8 @@
 # Handoff_study
 
-## 1. Script tool for iperf3, tcpdump
+## 1. Script tools for iperf3, tcpdump
 
-存放位置: `script_ss/` (for cell phone), `util/` (for server)
+存放位置: `script_ss/` (for cell phone), `utils/` (for server)
 
 Purpose: 以 script 型式一鍵執行 iperf3, tcpdump 等封包傳輸、封包收集工具
  
