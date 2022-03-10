@@ -14,5 +14,7 @@ Purpose: 紀錄基地台訊號等資訊，並儲存資訊成檔案以利後續�
 
 可以在手機螢幕上知道該秒服務手機的基地台以及訊號強度、GPS 位置等資訊。
 
+Note: 之後檔案需用 `post_processing/cell_info_csv_processing.py` 做處理
+
 
 
