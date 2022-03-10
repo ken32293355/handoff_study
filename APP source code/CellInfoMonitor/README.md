@@ -4,7 +4,7 @@ cellInfoMonitor 的安裝檔放 cellInfoMonitor 資料夾中的 `app\build\outpu
 
 安裝後須先允許應用程式的權限。
 
-![alt text] (https://github.com/ken32293355/handoff_study/blob/jason/APP%20source%20code/CellInfoMonitor/Picture1.jpg?raw=true)
+<img src="https://github.com/ken32293355/handoff_study/blob/jason/APP%20source%20code/CellInfoMonitor/Picture1.jpg" width="20%" height="20%">
 
 #### 修改
 完整的原始程式存放在名為 cellInfoMonitor 的 project 資料夾中。如果需要更改原始程式，則需要先安裝 visual studio 再進行修改。
@@ -19,7 +19,7 @@ c. `\app\src\main\AndroidManifest.xml` (權限相關)
 
 如欲透過 USB cable 在手機上安裝修改後的 project，則手機須先開啟開發者模式並 enable USB偵錯、USB安裝等權限。
 
-
+<img src="https://github.com/ken32293355/handoff_study/blob/jason/APP%20source%20code/CellInfoMonitor/Picture2.jpg" width="20%" height="20%">
 
 ### b. 操作流程
 在應用程式中有三個按鈕，分別為 start，record，以及 stop。
@@ -33,3 +33,16 @@ a. 此應用程式在跳出程式到主螢幕後都仍可以繼續在背景執�
 b. 實驗過程中應用程式的更新速度可能因為手機負載而變慢。手機重新開機後便可恢復正常。
 c. 只要按下 record 鍵，檔案就會⽣成，無論是按下 stop 主動停⽌，還是因意外⾃動停⽌，都會保存下直到停⽌前的記錄資訊。
 ```
+
+### c. 記錄檔案存放位置，檔案初步處理
+應用程式所記錄的檔案分別存放在手機「內部儲存空間」中的  `Android/data/com.example.cellinfomonitor` 以及 `Android/data/com.example.cellinfo5g` 資料夾中。
+
+所記錄檔案因為每行資料中，手機所記錄的基地台/carrier number 數量不盡相同，所以每行儲存格長度不一。所以須讓每行儲存格大小一致以避免在程式中做讀取時有錯誤發生。
+
+可以用 cell_info_csv_processing.py 做處理： (存放位置: `handoff study/post_processing/`)
+
+```
+python cell_info_csv_processing.py DIRECTOTY_NAME
+```
+
+上述指令可以將同一個資料夾中所有的 .csv files 同時做處理，使每一行最後補上 "-" 字元並讓每行儲存格大小相同。
