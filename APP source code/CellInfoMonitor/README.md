@@ -1,4 +1,4 @@
-### 4.a. 安裝/修改
+### a. 安裝/修改
 #### 安裝
 cellInfoMonitor 的安裝檔放 cellInfoMonitor 資料夾中的 `app\build\outputs\apk\debug` 路徑。
 
@@ -20,7 +20,7 @@ c. `\app\src\main\AndroidManifest.xml` (權限相關)
 
 
 
-### 4.b. 操作流程
+### b. 操作流程
 在應用程式中有三個按鈕，分別為 start，record，以及 stop。
 
 一、實驗開始時，須先按 start 鍵使程式開始運作，此時 cellInfoMonitor 應會顯示目前量測到的相關資訊
