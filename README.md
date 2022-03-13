@@ -2,7 +2,7 @@
 
 ## 1. Script tools for iperf3, tcpdump
 
-存放位置: `script_ss/` (for cell phone), `utils/iperf_server_for_class.py` (for server)
+存放位置: `script_ss/` (for samsung cell phone), `utils/iperf_server_for_class.py` (for server)
 
 Purpose: 以 script 型式一鍵執行 iperf3, tcpdump 等封包傳輸、封包收集工具
  
