@@ -191,7 +191,7 @@ while not exitprogram:
     t1.start()
     try:
 
-        while True and t.is_alive():
+        while True and t1.is_alive():
             x = input("Enter STOP to Stop\n")
             if x == "STOP":
                 thread_stop = True
