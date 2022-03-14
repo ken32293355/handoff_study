@@ -52,7 +52,7 @@ def remote_control(conn, t):
         except Exception as inst:
             print("Error: ", inst)
 
-def bybass_rx(s_udp):
+def receive(s_udp):
     s_udp.settimeout(10)
     print("wait for indata...")
     i = 0
@@ -99,7 +99,7 @@ while not exitprogram:
     time.sleep(2)
     s_tcp, s_udp, conn, tcp_addr, udp_addr = connection()
     thread_stop = False
-    t = threading.Thread(target = bybass_rx, args = (s_udp,))
+    t = threading.Thread(target = receive, args = (s_udp,))
     t2 = threading.Thread(target = remote_control, args = (conn, t))
     t.start()
     t2.start()

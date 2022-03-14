@@ -153,7 +153,7 @@ def transmision(s_udp, conn, udp_addr):
     print("transmit", i, "packets")
 
 
-def bybass_rx(s_udp):
+def receive(s_udp):
     s_udp.settimeout(3)
     print("wait for indata...")
     i = 0
@@ -214,7 +214,7 @@ while not exit_program:
         continue
     thread_stop = False
     t = threading.Thread(target = transmision, args = (s_udp, conn, udp_addr))
-    t1 = threading.Thread(target = bybass_rx, args = (s_udp,))
+    t1 = threading.Thread(target = receive, args = (s_udp,))
     t2 = threading.Thread(target = remote_control, args = (conn, t))
 
     t.start()

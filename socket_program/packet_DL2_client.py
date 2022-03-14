@@ -108,7 +108,7 @@ def connection_setup():
     s_tcp.sendall(b"OK")
     return s_tcp, s_udp1, s_udp2
 
-def bybass_rx(s_udp):
+def receive(s_udp):
     s_udp.settimeout(10)
     print("wait for indata...")
     i = 0
@@ -166,8 +166,8 @@ while not exitprogram:
         # os.system("pkill tcpdump")
         continue
     thread_stop = False
-    t1 = threading.Thread(target=bybass_rx, args=(s_udp1, ))
-    t2 = threading.Thread(target=bybass_rx, args=(s_udp2, ))
+    t1 = threading.Thread(target=receive, args=(s_udp1, ))
+    t2 = threading.Thread(target=receive, args=(s_udp2, ))
     t1.start()
     t2.start()
     while True and t1.is_alive() and t2.is_alive():

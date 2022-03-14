@@ -51,7 +51,7 @@ tcpsock.bind((TCP_IP, TCP_PORT))
 threads = []
 
 while True:
-    tcpsock.listen(5)
+    tcpsock.listen(10)
     print("Waiting for incoming connections...")
     (conn, (ip, port)) = tcpsock.accept()
     print('Got connection from ', (ip, port))
