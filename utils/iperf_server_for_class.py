@@ -51,7 +51,33 @@ if __name__ == '__main__':
                 
             while True:
                 time.sleep(3)
-                s = input("Enter \'STOP\' to stop: ")
+                try:
+                    s = input("Enter \'STOP\' to stop: ")
+                except KeyboardInterrupt:
+                    for run_item in run_list:
+                        try:
+                            print(run_item, ", PID: ", run_item.pid)
+                    
+                            pgid = os.getpgid(run_item.pid)
+                            
+                            command = "sudo kill -9 -{}".format(pgid)
+                            subprocess.check_output(command.split(" "))
+                        except Exception as e:
+                            print(e)
+                    break
+                finally:
+                    for run_item in run_list:
+                        try:
+                            print(run_item, ", PID: ", run_item.pid)
+                    
+                            pgid = os.getpgid(run_item.pid)
+                            
+                            command = "sudo kill -9 -{}".format(pgid)
+                            subprocess.check_output(command.split(" "))
+                        except Exception as e:
+                            print(e)
+                    break
+                   
                 time.sleep(0.1)
                 if s == 'STOP':
                     break
