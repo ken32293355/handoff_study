@@ -8,11 +8,13 @@ import datetime as dt
 import argparse
 import subprocess
 import re
+
 parser = argparse.ArgumentParser()
-parser.add_argument("-p", "--port", type=int,
+parser.add_argument("-p1", "--port1", type=int,
                     help="port to bind", default=3237)
+parser.add_argument("-p2", "--port2", type=int,
+                    help="port to bind", default=3238)
 args = parser.parse_args()
-print(args.port)
 
 IP_MTU_DISCOVER   = 10
 IP_PMTUDISC_DONT  =  0  # Never send DF frames.
@@ -23,8 +25,8 @@ TCP_CONGESTION = 13
 
 
 HOST = '192.168.1.248'
-PORT = args.port
-PORT = 3233
+PORT = args.port1
+PORT2 = args.port2
 thread_stop = False
 exit_program = False
 length_packet = 362
@@ -37,19 +39,21 @@ prev_sleeptime = sleeptime
 pcap_path = "/home/wmnlab/D/pcap_data"
 ss_dir = "/home/wmnlab/D/ss"
 hostname = str(PORT) + ":"
+
 cong = 'reno'.encode()
 
-def connection():
+def connection(host, port, result):
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s_tcp.setsockopt(socket.IPPROTO_TCP, TCP_CONGESTION, cong)
 
 
-    s_tcp.bind((HOST, PORT))
+    s_tcp.bind((host, port))
+    print((host, port), "wait for connection...")
     s_tcp.listen(1)
     conn, tcp_addr = s_tcp.accept()
-
-    return s_tcp, conn, tcp_addr
+    print((host, port), "connection setup complete")
+    result[0] = s_tcp, conn, tcp_addr
 
 def get_ss(port):
     now = dt.datetime.today()
@@ -63,8 +67,9 @@ def get_ss(port):
         f.write(",".join([str(dt.datetime.now())]+ re.split("[: \n\t]", line))+'\n')
         time.sleep(1)
     f.close()
-def transmision(conn):
-    print("start transmision to addr", conn)
+def transmision(conn1, conn2):
+    print("start transmision to addr", conn1)
+    print("start transmision to addr", conn2)
     i = 0
     prev_transmit = 0
     ok = (1).to_bytes(1, 'big')
@@ -81,7 +86,8 @@ def transmision(conn):
             z = i.to_bytes(8, 'big')
             redundent = os.urandom(length_packet-8*3-1)
             outdata = datetimedec.to_bytes(8, 'big') + microsec.to_bytes(8, 'big') + z + ok +redundent
-            conn.sendall(outdata)
+            conn1.sendall(outdata)
+            conn2.sendall(outdata)
             i += 1
             time.sleep(sleeptime)
             if time.time()-start_time > count:
@@ -98,7 +104,8 @@ def transmision(conn):
     ok = (0).to_bytes(1, 'big')
     redundent = os.urandom(length_packet-8*3-1)
     outdata = datetimedec.to_bytes(8, 'big') + microsec.to_bytes(8, 'big') + z + ok +redundent
-    conn.sendall(outdata)
+    conn1.sendall(outdata)
+    conn2.sendall(outdata)
 
     print("transmit", i, "packets")
 
@@ -155,31 +162,48 @@ if not os.path.exists(ss_dir):
 
 
 # os.system("kill -9 $(ps -A | grep python | awk '{print $1}')") 
-
+print(123)
 while not exit_program:
 
     now = dt.datetime.today()
     n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
-    #os.system("echo wmnlab | sudo -S pkill tcpdump")
-    # os.system("echo wmnlab | sudo -S tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT, pcap_path,PORT, n))
-    tcpproc =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT, pcap_path,PORT, n)], shell=True)
+    tcpproc1 =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT, pcap_path,PORT, n)], shell=True)
+    tcpproc2 =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT2, pcap_path,PORT, n)], shell=True)
     time.sleep(1)
     try:
-        s_tcp, conn, tcp_addr = connection()
+        result1 = [None]
+        result2 = [None]
+        connection_t1 = threading.Thread(target = connection, args = (HOST, PORT, result1))
+        connection_t2 = threading.Thread(target = connection, args = (HOST, PORT2, result2))
+        connection_t1.start()
+        connection_t2.start()
+        connection_t1.join()
+        connection_t2.join()
+        s_tcp1, conn1, tcp_addr1 = result1[0]
+        s_tcp2, conn2, tcp_addr2 = result2[0]
     except Exception as inst:
         print("Connection Error:", inst)
         continue
+    conn1.sendall(b"START")
+    conn2.sendall(b"START")
+
     thread_stop = False
-    t = threading.Thread(target = transmision, args = (conn, ))
-    t1 = threading.Thread(target = receive, args = (conn,))
+    t = threading.Thread(target = transmision, args = (conn1, conn2))
+    t1 = threading.Thread(target = receive, args = (conn1,))
     t2 = threading.Thread(target = get_ss, args = (PORT,))
+    t4 = threading.Thread(target = receive, args = (conn2,))
+    t5 = threading.Thread(target = get_ss, args = (PORT2,))
     t.start()
     t1.start()
     t2.start()
+    t4.start()
+    t5.start()
     try:
         t.join()
         t1.join()
         t2.join()
+        t4.join()
+        t5.join()
     except KeyboardInterrupt:
         print("finish")
     except Exception as inst:
@@ -187,6 +211,9 @@ while not exit_program:
         print("finish")
     finally:
         thread_stop = True
-        s_tcp.close()
-        conn.close()
-        tcpproc.terminate()
+        s_tcp1.close()
+        s_tcp2.close()
+        conn1.close()
+        conn2.close()
+        tcpproc1.terminate()
+        tcpproc2.terminate()

@@ -36,7 +36,7 @@ def talk():
        print ('congestion mechanism {} not available: {}'.format(cong_algorithm, errstr))
        return
 
-    res=s.connect_ex(addr)      # make the actual connection
+    res=s.connect(addr)      # make the actual connection
     if res!=0:
         print("connect to port ", portnum, " failed")
         exit()
