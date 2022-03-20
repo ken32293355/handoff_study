@@ -6,7 +6,7 @@ import os
 TCP_IP = '192.168.1.248'
 TCP_PORT = 3280
 BUFFER_SIZE = 4096
-
+targetdir = "/home/wmnlab/D"
 
 class ClientThread(Thread):
 
@@ -21,9 +21,9 @@ class ClientThread(Thread):
         devicename = self.sock.recv(BUFFER_SIZE).decode()
         filename = self.sock.recv(BUFFER_SIZE).decode()
         print("-"*30)
-        if not os.path.exists(devicename):
-            os.system("mkdir %s"%(devicename))
-        file_exists = os.path.exists(os.path.join(".", devicename, filename))
+        if not os.path.exists(os.path.join(targetdir, devicename)):
+            os.system("mkdir %s"%(os.path.join(targetdir, devicename)))
+        file_exists = os.path.exists(os.path.join(targetdir, devicename, filename))
 
         print("filename:", filename)
         print("device:", devicename)
@@ -33,7 +33,7 @@ class ClientThread(Thread):
             return
         else:
             self.sock.sendall(b"OK")
-        with open(os.path.join(".", devicename, filename), 'wb') as f:
+        with open(os.path.join(targetdir, devicename, filename), 'wb') as f:
             print('file opened')
             while True:
                 #print('receiving data...')

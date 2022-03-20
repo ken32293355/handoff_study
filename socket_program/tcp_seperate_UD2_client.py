@@ -10,6 +10,8 @@ import sys
 import os
 import queue
 import argparse
+import subprocess
+import re
 
 HOST = '140.112.20.183'
 
@@ -18,11 +20,13 @@ l = f.readline()
 PORT = int(l)
 
 # parser = argparse.ArgumentParser()
-# parser.add_argument("-p1", "--port", type=int,
+# parser.add_argument("-p", "--port", type=int,
 #                     help="port to bind", default=3237)
 # args = parser.parse_args()
 
 # PORT = args.port
+PORT2 = PORT + 10
+
 server_addr = (HOST, PORT)
 
 thread_stop = False
@@ -35,7 +39,6 @@ sleeptime = 1.0 / expected_packet_per_sec
 prev_sleeptime = sleeptime
 pcap_path = "pcapdir"
 exitprogram = False
-
 IP_MTU_DISCOVER   = 10
 IP_PMTUDISC_DONT  =  0  # Never send DF frames.
 IP_PMTUDISC_WANT  =  1  # Use per route hints.
@@ -43,13 +46,27 @@ IP_PMTUDISC_DO    =  2  # Always DF.
 IP_PMTUDISC_PROBE =  3  # Ignore dst pmtu.
 TCP_CONGESTION = 13   # defined in /usr/include/netinet/tcp.h
 cong = 'reno'.encode()
+ss_dir = "ss"
 
-def connection_setup():
+def get_ss(port):
+    now = dt.datetime.today()
+    n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
+    f = open(os.path.join(ss_dir, n) + '.csv', 'a+')
+    while not thread_stop:
+        proc = subprocess.Popen(["ss -it dst :%d"%(port)], stdout=subprocess.PIPE, shell=True)
+        line = proc.stdout.readline()
+        line = proc.stdout.readline()
+        line = proc.stdout.readline().decode().strip()
+        f.write(",".join([str(dt.datetime.now())]+ re.split("[: \n\t]", line))+'\n')
+        time.sleep(1)
+    f.close()
+
+def connection_setup(host, port, result):
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s_tcp.setsockopt(socket.SOL_IP, IP_MTU_DISCOVER, IP_PMTUDISC_DO)
     s_tcp.setsockopt(socket.IPPROTO_TCP, TCP_CONGESTION, cong)
     s_tcp.settimeout(10)
-    s_tcp.connect((HOST, PORT))
+    s_tcp.connect((host, port))
     # s_tcp.setsockopt(socket.SOL_IP, IP_MTU_DISCOVER, IP_PMTUDISC_DONT)
 
     while True:
@@ -63,7 +80,7 @@ def connection_setup():
         except Exception as inst:
             print("Error: ", inst)
 
-    return s_tcp
+    result[0] = s_tcp
 
 def transmision(s_tcp):
     print("start transmision to addr", s_tcp)
@@ -124,9 +141,7 @@ def receive(s_tcp):
                 seq = int(indata[16+j*length_packet:24+j*length_packet].hex(), 16)
                 # ts = int(int(indata[0:8].hex(), 16)) + float("0." + str(int(indata[8:16].hex(), 16)))
                 # print(dt.datetime.fromtimestamp(time.time())-dt.datetime.fromtimestamp(ts)-dt.timedelta(seconds=0.28))
-                # s_local.sendall(indata)
                 ok = int(indata[24+j*length_packet:25+j*length_packet].hex(), 16)
-                # buffer.put(indata)
                 if ok == 0:
                     break
                 else:
@@ -161,14 +176,25 @@ while not exitprogram:
         now = dt.datetime.today()
         n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
         os.system("tcpdump -i any net 140.112.20.183 -w %s/%s.pcap &"%(pcap_path,n))
-        s_tcp = connection_setup()
+        result1 = [None]
+        result2 = [None]
+        connection_t1 = threading.Thread(target = connection_setup, args = (HOST, PORT, result1))
+        connection_t2 = threading.Thread(target = connection_setup, args = (HOST, PORT2, result2))
+        connection_t1.start()
+        connection_t2.start()
+        connection_t1.join()
+        connection_t2.join()
+        s_tcp1 = result1[0]
+        s_tcp2 = result2[0]
+        assert (s_tcp1 != None and s_tcp2 != None)
+
     except Exception as inst:
         print("Error: ", inst)
         os.system("pkill tcpdump")
         continue
     thread_stop = False
-    t = threading.Thread(target=transmision, args=(s_tcp, ))
-    t2 = threading.Thread(target=receive, args=(s_tcp, ))
+    t = threading.Thread(target=transmision, args=(s_tcp1, ))
+    t2 = threading.Thread(target=receive, args=(s_tcp2, ))
     t.start()
     t2.start()
     try:
@@ -183,12 +209,14 @@ while not exitprogram:
                 exitprogram = True
         thread_stop = True
         t.join()
-        s_tcp.close()
+        t2.join()
 
 
     except Exception as inst:
         print("Error: ", inst)
     finally:
+
         thread_stop = True
-        pass
+        s_tcp1.close()
+        s_tcp2.close()
         os.system("pkill tcpdump")

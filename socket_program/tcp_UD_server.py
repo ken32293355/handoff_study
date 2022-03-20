@@ -24,7 +24,7 @@ TCP_CONGESTION = 13
 
 HOST = '192.168.1.248'
 PORT = args.port
-PORT = 3233
+PORT2 = args.port + 10
 thread_stop = False
 exit_program = False
 length_packet = 362
@@ -39,24 +39,25 @@ ss_dir = "/home/wmnlab/D/ss"
 hostname = str(PORT) + ":"
 cong = 'reno'.encode()
 
-def connection():
+def connection(host, port ,result):
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s_tcp.setsockopt(socket.IPPROTO_TCP, TCP_CONGESTION, cong)
 
 
-    s_tcp.bind((HOST, PORT))
+    s_tcp.bind((host, port))
     s_tcp.listen(1)
     conn, tcp_addr = s_tcp.accept()
-
-    return s_tcp, conn, tcp_addr
+    result[0] = s_tcp, conn, tcp_addr
 
 def get_ss(port):
     now = dt.datetime.today()
-    n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
-    f = open(os.path.join(ss_dir, n), 'a+')
+    n = str(port)+'_'+'-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
+    f = open(os.path.join(ss_dir, n)+".csv", 'a+')
     while not thread_stop:
-        proc = subprocess.Popen(["ss -ai dst :%d"%(port)], stdout=subprocess.PIPE, shell=True)
+        proc = subprocess.Popen(["ss -ai src :%d"%(port)], stdout=subprocess.PIPE, shell=True)
+        line = proc.stdout.readline()
+        line = proc.stdout.readline()
         line = proc.stdout.readline()
         line = proc.stdout.readline()
         line = proc.stdout.readline().decode().strip()
@@ -121,7 +122,8 @@ def receive(conn):
                 break
             duplicate_num = len(indata) // length_packet
             if len(indata) % length_packet != 0:
-                print("WTF", len(indata))
+                i += 1
+                continue                
             for j in range(duplicate_num):
                 seq = int(indata[16+j*length_packet:24+j*length_packet].hex(), 16)
                 # ts = int(int(indata[0:8].hex(), 16)) + float("0." + str(int(indata[8:16].hex(), 16)))
@@ -162,24 +164,41 @@ while not exit_program:
     n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
     #os.system("echo wmnlab | sudo -S pkill tcpdump")
     # os.system("echo wmnlab | sudo -S tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT, pcap_path,PORT, n))
-    tcpproc =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT, pcap_path,PORT, n)], shell=True)
+    tcpproc =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT, pcap_path, PORT, n)], shell=True)
+    tcpproc2 =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT2, pcap_path, PORT2, n)], shell=True)
     time.sleep(1)
     try:
-        s_tcp, conn, tcp_addr = connection()
+        # s_tcp, conn, tcp_addr = connection()
+
+        result1 = [None]
+        result2 = [None]
+        connection_t1 = threading.Thread(target = connection, args = (HOST, PORT, result1)) # DL
+        connection_t2 = threading.Thread(target = connection, args = (HOST, PORT2, result2)) # UL
+        connection_t1.start()
+        connection_t2.start()
+        connection_t1.join()
+        connection_t2.join()
+        s_tcp1, conn1, tcp_addr1 = result1[0]
+        s_tcp2, conn2, tcp_addr2 = result2[0]
+
+
     except Exception as inst:
         print("Connection Error:", inst)
         continue
     thread_stop = False
-    t = threading.Thread(target = transmision, args = (conn, ))
-    t1 = threading.Thread(target = receive, args = (conn,))
+    t = threading.Thread(target = transmision, args = (conn1, )) 
+    t1 = threading.Thread(target = receive, args = (conn2,))
     t2 = threading.Thread(target = get_ss, args = (PORT,))
+    t3 = threading.Thread(target = get_ss, args = (PORT2,))
     t.start()
     t1.start()
     t2.start()
+    t3.start()
     try:
         t.join()
         t1.join()
         t2.join()
+        t3.join()
     except KeyboardInterrupt:
         print("finish")
     except Exception as inst:
@@ -187,6 +206,9 @@ while not exit_program:
         print("finish")
     finally:
         thread_stop = True
-        s_tcp.close()
-        conn.close()
+        s_tcp1.close()
+        s_tcp2.close()
+        conn1.close()
+        conn2.close()
         tcpproc.terminate()
+        tcpproc2.terminate()

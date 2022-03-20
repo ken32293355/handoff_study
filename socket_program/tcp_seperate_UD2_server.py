@@ -27,6 +27,9 @@ TCP_CONGESTION = 13
 HOST = '192.168.1.248'
 PORT = args.port1
 PORT2 = args.port2
+PORT3 = args.port1 + 10
+PORT4 = args.port2 + 10
+
 thread_stop = False
 exit_program = False
 length_packet = 362
@@ -46,8 +49,6 @@ def connection(host, port, result):
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s_tcp.setsockopt(socket.IPPROTO_TCP, TCP_CONGESTION, cong)
-
-
     s_tcp.bind((host, port))
     print((host, port), "wait for connection...")
     s_tcp.listen(1)
@@ -58,7 +59,7 @@ def connection(host, port, result):
 def get_ss(port):
     now = dt.datetime.today()
     n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
-    f = open(os.path.join(ss_dir, n), 'a+')
+    f = open(os.path.join(ss_dir, n)+'.csv', 'a+')
     while not thread_stop:
         proc = subprocess.Popen(["ss -ai dst :%d"%(port)], stdout=subprocess.PIPE, shell=True)
         line = proc.stdout.readline()
@@ -128,7 +129,8 @@ def receive(conn):
                 break
             duplicate_num = len(indata) // length_packet
             if len(indata) % length_packet != 0:
-                print("WTF", len(indata))
+                i += 1
+                continue                
             for j in range(duplicate_num):
                 seq = int(indata[16+j*length_packet:24+j*length_packet].hex(), 16)
                 # ts = int(int(indata[0:8].hex(), 16)) + float("0." + str(int(indata[8:16].hex(), 16)))
@@ -161,49 +163,67 @@ if not os.path.exists(ss_dir):
     os.system("mkdir %s"%(ss_dir))
 
 
-# os.system("kill -9 $(ps -A | grep python | awk '{print $1}')") 
-print(123)
 while not exit_program:
 
     now = dt.datetime.today()
     n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
     tcpproc1 =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT, pcap_path,PORT, n)], shell=True)
-    tcpproc2 =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT2, pcap_path,PORT, n)], shell=True)
+    tcpproc2 =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT2, pcap_path,PORT2, n)], shell=True)
+    tcpproc3 =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT3, pcap_path,PORT3, n)], shell=True)
+    tcpproc4 =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT4, pcap_path,PORT4, n)], shell=True)
     time.sleep(1)
     try:
         result1 = [None]
         result2 = [None]
-        connection_t1 = threading.Thread(target = connection, args = (HOST, PORT, result1))
-        connection_t2 = threading.Thread(target = connection, args = (HOST, PORT2, result2))
+        result3 = [None]
+        result4 = [None]
+        connection_t1 = threading.Thread(target = connection, args = (HOST, PORT, result1))  # UE1 UL
+        connection_t2 = threading.Thread(target = connection, args = (HOST, PORT2, result2)) # UE2 UL
+        connection_t3 = threading.Thread(target = connection, args = (HOST, PORT3, result3)) # UE1 DL
+        connection_t4 = threading.Thread(target = connection, args = (HOST, PORT4, result4)) # UE2 DL
         connection_t1.start()
         connection_t2.start()
+        connection_t3.start()
+        connection_t4.start()
         connection_t1.join()
         connection_t2.join()
+        connection_t3.join()
+        connection_t4.join()
         s_tcp1, conn1, tcp_addr1 = result1[0]
         s_tcp2, conn2, tcp_addr2 = result2[0]
+        s_tcp3, conn3, tcp_addr3 = result3[0]
+        s_tcp4, conn4, tcp_addr4 = result4[0]
     except Exception as inst:
         print("Connection Error:", inst)
         continue
     conn1.sendall(b"START")
     conn2.sendall(b"START")
+    conn3.sendall(b"START")
+    conn4.sendall(b"START")
 
     thread_stop = False
-    t = threading.Thread(target = transmision, args = (conn1, conn2))
+    t = threading.Thread(target = transmision, args = (conn3, conn4))
     t1 = threading.Thread(target = receive, args = (conn1,))
-    t2 = threading.Thread(target = get_ss, args = (PORT,))
-    t4 = threading.Thread(target = receive, args = (conn2,))
-    t5 = threading.Thread(target = get_ss, args = (PORT2,))
+    t2 = threading.Thread(target = receive, args = (conn2,))
+    t3 = threading.Thread(target = get_ss, args = (PORT,))
+    t4 = threading.Thread(target = get_ss, args = (PORT2,))
+    t5 = threading.Thread(target = get_ss, args = (PORT3,))
+    t6 = threading.Thread(target = get_ss, args = (PORT4,))
     t.start()
     t1.start()
     t2.start()
+    t3.start()
     t4.start()
     t5.start()
+    t6.start()
     try:
         t.join()
         t1.join()
         t2.join()
+        t3.join()
         t4.join()
         t5.join()
+        t6.join()
     except KeyboardInterrupt:
         print("finish")
     except Exception as inst:
@@ -213,7 +233,13 @@ while not exit_program:
         thread_stop = True
         s_tcp1.close()
         s_tcp2.close()
+        s_tcp3.close()
+        s_tcp4.close()
         conn1.close()
         conn2.close()
+        conn3.close()
+        conn4.close()
         tcpproc1.terminate()
         tcpproc2.terminate()
+        tcpproc3.terminate()
+        tcpproc4.terminate()

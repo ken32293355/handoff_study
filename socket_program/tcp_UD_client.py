@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from ast import While
 import socket
 import time
 import threading
@@ -10,14 +9,18 @@ import select
 import sys
 import os
 import queue
+import subprocess
+import re
 
 HOST = '140.112.20.183'
 
 f = open("port.txt", "r")
 l = f.readline()
 PORT = int(l)
-
 # PORT = 3237
+PORT2 = PORT + 10
+# PORT = 3231
+# PORT2 = 3241
 
 server_addr = (HOST, PORT)
 
@@ -29,7 +32,8 @@ total_time = 3600
 expected_packet_per_sec = bandwidth / (length_packet << 3)
 sleeptime = 1.0 / expected_packet_per_sec
 prev_sleeptime = sleeptime
-pcap_path = "/home/wmnlab/D/pcap_data"
+pcap_path = "pcap_data"
+ss_dir = "ss"
 exitprogram = False
 
 IP_MTU_DISCOVER   = 10
@@ -40,13 +44,27 @@ IP_PMTUDISC_PROBE =  3  # Ignore dst pmtu.
 TCP_CONGESTION = 13   # defined in /usr/include/netinet/tcp.h
 cong = 'reno'.encode()
 
-def connection_setup():
+def get_ss(port):
+    now = dt.datetime.today()
+    n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
+    f = open(os.path.join(ss_dir, n) + '.csv', 'a+')
+    while not thread_stop:
+        proc = subprocess.Popen(["ss -it dst :%d"%(port)], stdout=subprocess.PIPE, shell=True)
+        line = proc.stdout.readline()
+        line = proc.stdout.readline()
+        line = proc.stdout.readline().decode().strip()
+        f.write(",".join([str(dt.datetime.now())]+ re.split("[: \n\t]", line))+'\n')
+        time.sleep(1)
+    f.close()
+
+
+def connection_setup(host, port, result):
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s_tcp.connect((HOST, PORT))
+    s_tcp.connect((host, port))
     # s_tcp.setsockopt(socket.SOL_IP, IP_MTU_DISCOVER, IP_PMTUDISC_DONT)
     s_tcp.setsockopt(socket.SOL_IP, IP_MTU_DISCOVER, IP_PMTUDISC_DO)
     s_tcp.setsockopt(socket.IPPROTO_TCP, TCP_CONGESTION, cong)
-
+    result[0] = s_tcp
     return s_tcp
 
 def transmision(s_tcp):
@@ -133,6 +151,9 @@ def receive(s_tcp):
 if not os.path.exists(pcap_path):
     os.system("mkdir %s"%(pcap_path))
 
+if not os.path.exists(ss_dir):
+    os.system("mkdir %s"%(ss_dir))
+
 
 
 while not exitprogram:
@@ -145,16 +166,30 @@ while not exitprogram:
         now = dt.datetime.today()
         n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
         # os.system("tcpdump -i any net 140.112.20.183 -w %s/%s.pcap &"%(pcap_path,n))
-        s_tcp = connection_setup()
+        result1 = [None]
+        result2 = [None]
+        connection_t1 = threading.Thread(target = connection_setup, args = (HOST, PORT, result1))
+        connection_t2 = threading.Thread(target = connection_setup, args = (HOST, PORT2, result2))
+        connection_t1.start()
+        connection_t2.start()
+        connection_t1.join()
+        connection_t2.join()
+        s_tcp1 = result1[0]
+        s_tcp2 = result2[0]
+
+
+
     except Exception as inst:
         print("Error: ", inst)
         os.system("pkill tcpdump")
         continue
     thread_stop = False
-    t = threading.Thread(target=transmision, args=(s_tcp, ))
-    t2 = threading.Thread(target=receive, args=(s_tcp, ))
+    t = threading.Thread(target=transmision, args=(s_tcp2, ))
+    t2 = threading.Thread(target=receive, args=(s_tcp1, ))
+    t3 = threading.Thread(target=get_ss, args=(PORT, ))
     t.start()
     t2.start()
+    t3.start()
     try:
 
         while True and t.is_alive():
@@ -167,12 +202,14 @@ while not exitprogram:
                 exitprogram = True
         thread_stop = True
         t.join()
-        s_tcp.close()
-
+        t2.join()
+        t3.join()
 
     except Exception as inst:
         print("Error: ", inst)
     finally:
         thread_stop = True
+        s_tcp1.close()
+        s_tcp2.close()
         pass
         # os.system("pkill tcpdump")
