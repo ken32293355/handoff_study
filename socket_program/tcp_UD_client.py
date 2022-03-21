@@ -32,7 +32,7 @@ total_time = 3600
 expected_packet_per_sec = bandwidth / (length_packet << 3)
 sleeptime = 1.0 / expected_packet_per_sec
 prev_sleeptime = sleeptime
-pcap_path = "pcap_data"
+pcap_path = "pcapdir"
 ss_dir = "ss"
 exitprogram = False
 
