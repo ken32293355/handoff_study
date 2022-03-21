@@ -165,7 +165,8 @@ while not exitprogram:
             break
         now = dt.datetime.today()
         n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
-        # os.system("tcpdump -i any net 140.112.20.183 -w %s/%s.pcap &"%(pcap_path,n))
+        tcpproc =  subprocess.Popen(["tcpdump -i any net 140.112.20.183  -w %s/%s.pcap&"%(pcap_path, n)], shell=True)
+        
         result1 = [None]
         result2 = [None]
         connection_t1 = threading.Thread(target = connection_setup, args = (HOST, PORT, result1))
@@ -181,7 +182,7 @@ while not exitprogram:
 
     except Exception as inst:
         print("Error: ", inst)
-        os.system("pkill tcpdump")
+        tcpproc.terminate()
         continue
     thread_stop = False
     t = threading.Thread(target=transmision, args=(s_tcp2, ))
@@ -211,5 +212,4 @@ while not exitprogram:
         thread_stop = True
         s_tcp1.close()
         s_tcp2.close()
-        pass
-        # os.system("pkill tcpdump")
+        tcpproc.terminate()
