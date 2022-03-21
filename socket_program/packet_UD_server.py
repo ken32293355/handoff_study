@@ -27,7 +27,7 @@ total_time = 3600
 expected_packet_per_sec = bandwidth / (length_packet << 3)
 sleeptime = 1.0 / expected_packet_per_sec
 prev_sleeptime = sleeptime
-pcap_path = "pcapdir"
+pcap_path = "/home/wmnlab/D/pcap_data"
 
 hostname = str(PORT) + ":"
 
