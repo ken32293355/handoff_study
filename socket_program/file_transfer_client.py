@@ -12,6 +12,7 @@ devicename = open("device.txt", "r").readline()
 devicename = devicename if '\n' not in devicename else devicename[:-1]
 
 target_dir1 = r"/sdcard/handoff_study/socket_program/pcapdir"
+target_dir3 = r"/sdcard/handoff_study/socket_program/ss"
 target_dir2 = r"/sdcard/Android/data/com.example.cellinfomonitor/files/Documents"
 
 def senddir(target_dir):
@@ -44,5 +45,6 @@ def senddir(target_dir):
         print('connection closed')
         time.sleep(1)
 
+senddir(target_dir3)
 senddir(target_dir2)
 senddir(target_dir1)
