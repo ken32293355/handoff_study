@@ -28,16 +28,17 @@ PORT2 = args.port + 10
 thread_stop = False
 exit_program = False
 length_packet = 362
-bandwidth = 20000*1000
+bandwidth = 289.6*1000
+bandwidth = 289.6*100000
 total_time = 3600
-cong_algorithm = 'reno'
+cong_algorithm = 'cubic'
 expected_packet_per_sec = bandwidth / (length_packet << 3)
 sleeptime = 1.0 / expected_packet_per_sec
 prev_sleeptime = sleeptime
 pcap_path = "/home/wmnlab/D/pcap_data"
 ss_dir = "/home/wmnlab/D/ss"
 hostname = str(PORT) + ":"
-cong = 'reno'.encode()
+cong = 'cubic'.encode()
 
 def connection(host, port ,result):
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -123,6 +124,7 @@ def receive(conn):
                 break
             duplicate_num = len(indata) // length_packet
             if len(indata) % length_packet != 0:
+                print("LEN", len(indata))
                 i += 1
                 continue                
             for j in range(duplicate_num):
@@ -157,19 +159,16 @@ if not os.path.exists(ss_dir):
     os.system("mkdir %s"%(ss_dir))
 
 
-# os.system("kill -9 $(ps -A | grep python | awk '{print $1}')") 
-
 while not exit_program:
 
     now = dt.datetime.today()
     n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
-    #os.system("echo wmnlab | sudo -S pkill tcpdump")
-    # os.system("echo wmnlab | sudo -S tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT, pcap_path,PORT, n))
-    tcpproc =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT, pcap_path, PORT, n)], shell=True)
-    tcpproc2 =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT2, pcap_path, PORT2, n)], shell=True)
-    time.sleep(1)
     try:
         # s_tcp, conn, tcp_addr = connection()
+        pcapfile1 = "%s/DL_%s_%s.pcap"%(pcap_path, PORT, n)
+        pcapfile2 = "%s/UL_%s_%s.pcap"%(pcap_path, PORT2, n)
+        tcpproc =  subprocess.Popen(["tcpdump -i any port %s -w %s&"%(PORT, pcapfile1)], shell=True)
+        tcpproc2 =  subprocess.Popen(["tcpdump -i any port %s -w %s&"%(PORT2, pcapfile2)], shell=True)
 
         result1 = [None]
         result2 = [None]
@@ -182,10 +181,14 @@ while not exit_program:
         s_tcp1, conn1, tcp_addr1 = result1[0]
         s_tcp2, conn2, tcp_addr2 = result2[0]
 
-
     except Exception as inst:
         print("Connection Error:", inst)
+        tcpproc.terminate()
+        tcpproc2.terminate()
+        subprocess.Popen(["rm %s"%(pcapfile1)], shell=True)
+        subprocess.Popen(["rm %s"%(pcapfile2)], shell=True)
         continue
+
     thread_stop = False
     t = threading.Thread(target = transmision, args = (conn1, )) 
     t1 = threading.Thread(target = receive, args = (conn2,))

@@ -33,9 +33,9 @@ PORT4 = args.port2 + 10
 thread_stop = False
 exit_program = False
 length_packet = 362
-bandwidth = 20000*1000
+bandwidth = 289.6*1000
 total_time = 3600
-cong_algorithm = 'reno'
+cong_algorithm = 'cubic'
 expected_packet_per_sec = bandwidth / (length_packet << 3)
 sleeptime = 1.0 / expected_packet_per_sec
 prev_sleeptime = sleeptime
@@ -167,10 +167,10 @@ while not exit_program:
 
     now = dt.datetime.today()
     n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
-    tcpproc1 =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT, pcap_path,PORT, n)], shell=True)
-    tcpproc2 =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT2, pcap_path,PORT2, n)], shell=True)
-    tcpproc3 =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT3, pcap_path,PORT3, n)], shell=True)
-    tcpproc4 =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT4, pcap_path,PORT4, n)], shell=True)
+    tcpproc1 =  subprocess.Popen(["tcpdump -i any port %s -w %s/UL_%s_%s.pcap&"%(PORT, pcap_path,PORT, n)], shell=True)
+    tcpproc2 =  subprocess.Popen(["tcpdump -i any port %s -w %s/UL_%s_%s.pcap&"%(PORT2, pcap_path,PORT2, n)], shell=True)
+    tcpproc3 =  subprocess.Popen(["tcpdump -i any port %s -w %s/DL_%s_%s.pcap&"%(PORT3, pcap_path,PORT3, n)], shell=True)
+    tcpproc4 =  subprocess.Popen(["tcpdump -i any port %s -w %s/DL_%s_%s.pcap&"%(PORT4, pcap_path,PORT4, n)], shell=True)
     time.sleep(1)
     try:
         result1 = [None]

@@ -27,7 +27,7 @@ server_addr = (HOST, PORT)
 thread_stop = False
 exit_program = False
 length_packet = 362
-bandwidth = 20000*1000
+bandwidth = 289.6*1000
 total_time = 3600
 expected_packet_per_sec = bandwidth / (length_packet << 3)
 sleeptime = 1.0 / expected_packet_per_sec
@@ -42,7 +42,7 @@ IP_PMTUDISC_WANT  =  1  # Use per route hints.
 IP_PMTUDISC_DO    =  2  # Always DF.
 IP_PMTUDISC_PROBE =  3  # Ignore dst pmtu.
 TCP_CONGESTION = 13   # defined in /usr/include/netinet/tcp.h
-cong = 'reno'.encode()
+cong = 'cubic'.encode()
 
 def get_ss(port):
     now = dt.datetime.today()
@@ -177,6 +177,7 @@ while not exitprogram:
         connection_t2.join()
         s_tcp1 = result1[0]
         s_tcp2 = result2[0]
+        assert(s_tcp1 != None)
 
 
 
