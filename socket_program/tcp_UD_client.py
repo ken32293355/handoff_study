@@ -213,5 +213,5 @@ while not exitprogram:
         thread_stop = True
         s_tcp1.close()
         s_tcp2.close()
-	os.system("pkill tcpdump")
-        tcpproc.terminate()
+        os.system("pkill tcpdump")
+        tcpproc.terminate() # this seems to useless???
