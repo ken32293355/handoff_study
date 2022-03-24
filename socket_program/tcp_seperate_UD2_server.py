@@ -25,15 +25,15 @@ TCP_CONGESTION = 13
 
 
 HOST = '192.168.1.248'
-PORT = args.port1
-PORT2 = args.port2
-PORT3 = args.port1 + 10
-PORT4 = args.port2 + 10
+PORT = args.port1           # UL
+PORT2 = args.port2          # UL
+PORT3 = args.port1 + 10     # DL
+PORT4 = args.port2 + 10     # DL
 
 thread_stop = False
 exit_program = False
 length_packet = 362
-bandwidth = 289.6*1000
+bandwidth = 289.6*1000*100
 total_time = 3600
 cong_algorithm = 'cubic'
 expected_packet_per_sec = bandwidth / (length_packet << 3)
@@ -48,6 +48,7 @@ cong = 'reno'.encode()
 def connection(host, port, result):
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s_tcp.setsockopt(socket.SOL_IP, IP_MTU_DISCOVER, IP_PMTUDISC_DO)
     s_tcp.setsockopt(socket.IPPROTO_TCP, TCP_CONGESTION, cong)
     s_tcp.bind((host, port))
     print((host, port), "wait for connection...")

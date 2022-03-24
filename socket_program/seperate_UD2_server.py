@@ -12,6 +12,7 @@ import os
 import queue
 import subprocess
 import argparse
+import signal
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-p1", "--port1", type=int,
@@ -256,6 +257,6 @@ while not exitprogram:
     s_udp2.close()
     conn1.close()
     conn2.close()
-    tcpproc1.terminate()
-    tcpproc2.terminate()
+    os.killpg(os.getpgid(tcpproc1.pid), signal.SIGTERM)
+    os.killpg(os.getpgid(tcpproc2.pid), signal.SIGTERM)
 

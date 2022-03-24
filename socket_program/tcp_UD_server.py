@@ -8,6 +8,8 @@ import datetime as dt
 import argparse
 import subprocess
 import re
+import signal
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-p", "--port", type=int,
                     help="port to bind", default=3237)
@@ -167,8 +169,8 @@ while not exit_program:
         # s_tcp, conn, tcp_addr = connection()
         pcapfile1 = "%s/DL_%s_%s.pcap"%(pcap_path, PORT, n)
         pcapfile2 = "%s/UL_%s_%s.pcap"%(pcap_path, PORT2, n)
-        tcpproc =  subprocess.Popen(["tcpdump -i any port %s -w %s&"%(PORT, pcapfile1)], shell=True)
-        tcpproc2 =  subprocess.Popen(["tcpdump -i any port %s -w %s&"%(PORT2, pcapfile2)], shell=True)
+        tcpproc =  subprocess.Popen(["tcpdump -i any port %s -w %s&"%(PORT, pcapfile1)], shell=True, preexec_fn=os.setsid)
+        tcpproc2 =  subprocess.Popen(["tcpdump -i any port %s -w %s&"%(PORT2, pcapfile2)], shell=True, preexec_fn=os.setsid)
 
         result1 = [None]
         result2 = [None]
@@ -214,5 +216,5 @@ while not exit_program:
         s_tcp2.close()
         conn1.close()
         conn2.close()
-        tcpproc.terminate()
-        tcpproc2.terminate()
+        os.killpg(os.getpgid(tcpproc.pid), signal.SIGTERM)
+        os.killpg(os.getpgid(tcpproc2.pid), signal.SIGTERM)
