@@ -34,7 +34,7 @@ PORT4 = args.port2 + 10     # DL
 thread_stop = False
 exit_program = False
 length_packet = 362
-bandwidth = 289.6*1000*100
+bandwidth = 289.6*1000*10
 total_time = 3600
 cong_algorithm = 'cubic'
 expected_packet_per_sec = bandwidth / (length_packet << 3)
@@ -203,7 +203,7 @@ while not exit_program:
     conn2.sendall(b"START")
     conn3.sendall(b"START")
     conn4.sendall(b"START")
-
+    time.sleep(0.5)
     thread_stop = False
     t = threading.Thread(target = transmision, args = (conn3, conn4))
     t1 = threading.Thread(target = receive, args = (conn1,))

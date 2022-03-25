@@ -70,13 +70,15 @@ def connection_setup(host, port, result):
     # s_tcp.setsockopt(socket.SOL_IP, IP_MTU_DISCOVER, IP_PMTUDISC_DONT)
 
     while True:
-        print("wait for starting...")
+        print("%d wait for starting..."%(port))
         try:
             indata = s_tcp.recv(65535)
             if indata == b'START':
                 print("START")
                 break
-
+            else:
+                print("WTF", indata)
+                break
         except Exception as inst:
             print("Error: ", inst)
 
@@ -190,7 +192,7 @@ while not exitprogram:
 
     except Exception as inst:
         print("Error: ", inst)
-        # os.system("pkill tcpdump")
+        os.system("pkill tcpdump")
         continue
     thread_stop = False
     t = threading.Thread(target=transmision, args=(s_tcp1, ))
