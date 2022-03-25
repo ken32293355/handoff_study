@@ -180,10 +180,9 @@ while not exitprogram:
         assert(s_tcp1 != None)
 
 
-
     except Exception as inst:
         print("Error: ", inst)
-        tcpproc.terminate()
+        os.system("pkill tcpdump")
         continue
     thread_stop = False
     t = threading.Thread(target=transmision, args=(s_tcp2, ))
@@ -214,4 +213,3 @@ while not exitprogram:
         s_tcp1.close()
         s_tcp2.close()
         os.system("pkill tcpdump")
-        tcpproc.terminate() # this seems to useless???

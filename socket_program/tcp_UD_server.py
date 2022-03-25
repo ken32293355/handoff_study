@@ -31,13 +31,13 @@ thread_stop = False
 exit_program = False
 length_packet = 362
 bandwidth = 289.6*1000
-bandwidth = 289.6*100000
+bandwidth = 289.6*10000
 total_time = 3600
 cong_algorithm = 'cubic'
 expected_packet_per_sec = bandwidth / (length_packet << 3)
 sleeptime = 1.0 / expected_packet_per_sec
 prev_sleeptime = sleeptime
-pcap_path = "/home/wmnlab/D/pcap_data"
+pcap_path = "/home/wmnlab/D/pcap_data2"
 ss_dir = "/home/wmnlab/D/ss"
 hostname = str(PORT) + ":"
 cong = 'cubic'.encode()
@@ -182,11 +182,19 @@ while not exit_program:
         connection_t2.join()
         s_tcp1, conn1, tcp_addr1 = result1[0]
         s_tcp2, conn2, tcp_addr2 = result2[0]
-
+    except KeyboardInterrupt:
+        print("KeyboardInterrupt -> kill tcpdump")
+        os.killpg(os.getpgid(tcpproc.pid), signal.SIGTERM)
+        os.killpg(os.getpgid(tcpproc2.pid), signal.SIGTERM)
+        subprocess.Popen(["rm %s"%(pcapfile1)], shell=True)
+        subprocess.Popen(["rm %s"%(pcapfile2)], shell=True)
+        exit_program = True
+        thread_stop = True
+        break
     except Exception as inst:
         print("Connection Error:", inst)
-        tcpproc.terminate()
-        tcpproc2.terminate()
+        os.killpg(os.getpgid(tcpproc.pid), signal.SIGTERM)
+        os.killpg(os.getpgid(tcpproc2.pid), signal.SIGTERM)
         subprocess.Popen(["rm %s"%(pcapfile1)], shell=True)
         subprocess.Popen(["rm %s"%(pcapfile2)], shell=True)
         continue
@@ -207,6 +215,7 @@ while not exit_program:
         t3.join()
     except KeyboardInterrupt:
         print("finish")
+        exit_program = True
     except Exception as inst:
         print("Error:", inst)
         print("finish")

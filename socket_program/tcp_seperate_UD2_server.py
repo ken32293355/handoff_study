@@ -8,6 +8,7 @@ import datetime as dt
 import argparse
 import subprocess
 import re
+import signal
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-p1", "--port1", type=int,
@@ -69,6 +70,7 @@ def get_ss(port):
         f.write(",".join([str(dt.datetime.now())]+ re.split("[: \n\t]", line))+'\n')
         time.sleep(1)
     f.close()
+
 def transmision(conn1, conn2):
     print("start transmision to addr", conn1)
     print("start transmision to addr", conn2)
@@ -168,10 +170,10 @@ while not exit_program:
 
     now = dt.datetime.today()
     n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
-    tcpproc1 =  subprocess.Popen(["tcpdump -i any port %s -w %s/UL_%s_%s.pcap&"%(PORT, pcap_path,PORT, n)], shell=True)
-    tcpproc2 =  subprocess.Popen(["tcpdump -i any port %s -w %s/UL_%s_%s.pcap&"%(PORT2, pcap_path,PORT2, n)], shell=True)
-    tcpproc3 =  subprocess.Popen(["tcpdump -i any port %s -w %s/DL_%s_%s.pcap&"%(PORT3, pcap_path,PORT3, n)], shell=True)
-    tcpproc4 =  subprocess.Popen(["tcpdump -i any port %s -w %s/DL_%s_%s.pcap&"%(PORT4, pcap_path,PORT4, n)], shell=True)
+    tcpproc1 =  subprocess.Popen(["tcpdump -i any port %s -w %s/UL_%s_%s.pcap&"%(PORT, pcap_path,PORT, n)], shell=True, preexec_fn=os.setsid)
+    tcpproc2 =  subprocess.Popen(["tcpdump -i any port %s -w %s/UL_%s_%s.pcap&"%(PORT2, pcap_path,PORT2, n)], shell=True, preexec_fn=os.setsid)
+    tcpproc3 =  subprocess.Popen(["tcpdump -i any port %s -w %s/DL_%s_%s.pcap&"%(PORT3, pcap_path,PORT3, n)], shell=True, preexec_fn=os.setsid)
+    tcpproc4 =  subprocess.Popen(["tcpdump -i any port %s -w %s/DL_%s_%s.pcap&"%(PORT4, pcap_path,PORT4, n)], shell=True, preexec_fn=os.setsid)
     time.sleep(1)
     try:
         result1 = [None]
@@ -240,7 +242,7 @@ while not exit_program:
         conn2.close()
         conn3.close()
         conn4.close()
-        tcpproc1.terminate()
-        tcpproc2.terminate()
-        tcpproc3.terminate()
-        tcpproc4.terminate()
+        os.killpg(os.getpgid(tcpproc1.pid), signal.SIGTERM)
+        os.killpg(os.getpgid(tcpproc2.pid), signal.SIGTERM)
+        os.killpg(os.getpgid(tcpproc3.pid), signal.SIGTERM)
+        os.killpg(os.getpgid(tcpproc4.pid), signal.SIGTERM)
