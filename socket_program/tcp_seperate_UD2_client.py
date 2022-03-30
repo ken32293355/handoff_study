@@ -197,8 +197,12 @@ while not exitprogram:
     thread_stop = False
     t = threading.Thread(target=transmision, args=(s_tcp1, ))
     t2 = threading.Thread(target=receive, args=(s_tcp2, ))
+    t3 = threading.Thread(target=get_ss, args=(PORT, ))
+    t4 = threading.Thread(target=get_ss, args=(PORT2, ))
     t.start()
     t2.start()
+    t3.start()
+    t4.start()
     try:
 
         while True and t.is_alive():
@@ -212,6 +216,8 @@ while not exitprogram:
         thread_stop = True
         t.join()
         t2.join()
+        t3.join()
+        t4.join()
 
 
     except Exception as inst:
