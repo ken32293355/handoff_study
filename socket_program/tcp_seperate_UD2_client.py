@@ -63,7 +63,7 @@ def get_ss(port):
 
 def connection_setup(host, port, result):
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s_tcp.setsockopt(socket.SOL_IP, IP_MTU_DISCOVER, IP_PMTUDISC_DO)
+    # s_tcp.setsockopt(socket.SOL_IP, IP_MTU_DISCOVER, IP_PMTUDISC_DO)
     s_tcp.setsockopt(socket.IPPROTO_TCP, TCP_CONGESTION, cong)
     s_tcp.settimeout(10)
     s_tcp.connect((host, port))
