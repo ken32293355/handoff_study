@@ -199,7 +199,7 @@ def print_packets(pcap, N=50, ano_display=False, M=50):
             print('Maximal display number: %d. The remaining results are hidden.\n' % N)
             break
     if ano_display:
-        print('------- Anamolies -------')
+        print('------- Anomalies -------')
         for key, lst in anomalies.items():
             if lst:
                 print(key)
