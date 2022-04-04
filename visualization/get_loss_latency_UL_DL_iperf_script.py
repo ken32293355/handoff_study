@@ -328,7 +328,6 @@ def get_loss_latency_UL(pcap):
                 loss_linspace = np.linspace(timestamp_store, timestamp, timestamp[3]-pointer+2)
                 loss_linspace = loss_linspace[1:-1]
                 for item in loss_linspace:
-                    print(item)
                     # !!! Uplink: estimated transmitted time (UE-side) !!!
                     loss_time = to_utc8(item[1] + item[2]/1e6)
                     loss_timestamps.append(loss_time)
