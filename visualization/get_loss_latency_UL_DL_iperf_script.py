@@ -224,6 +224,7 @@ def print_packets(pcap, N=50, ano_display=False, M=50):
                         print('Maximal display number: %d. The remaining %d results are hidden.' % (M, len(lst)-M))
                         break
                 print()
+        print()
 
 def get_loss_latency_UL(pcap):
     """Calculate latency of each arrived packet and analyze the packet loss events
@@ -541,11 +542,13 @@ if __name__ == "__main__":
     DL_loss_timestamps, DL_latency = get_loss_latency_DL(pcap)
 
     plt.subplot(2,1,1)
+    plt.gca().set_title('Uplink')
     plt.plot(UL_latency[0], UL_latency[1], c='blue')
     for loss_time in UL_loss_timestamps:
         plt.axvline(loss_time, c='red')
 
     plt.subplot(2,1,2)
+    plt.gca().set_title('Downlink')
     plt.plot(DL_latency[0], DL_latency[1], c='blue')
     for loss_time in DL_loss_timestamps:
         plt.axvline(loss_time, c='red')
