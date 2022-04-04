@@ -97,6 +97,7 @@ def print_packet(timestamp, buf, seq_set=set(), println=True):
            timestamp: timestamp of a packet in dpkt pcap reader object
            buf: content of a packets in dpkt pcap reader object
            seq_set: set of sequence numbers occured before
+           println (bool): display the information or not
        Returns:
            flags (list): list of Exception/Error/Warning encountering
            seq_set: updated set of sequence numbers occured before
