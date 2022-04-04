@@ -90,7 +90,7 @@ class Flags(enum.Enum):
     SEQ_NOT_CONTI = 5
     SEQ_DUPL = 6
 
-def print_packet(timestamp, buf, seq_set=set()):
+def print_packet(timestamp, buf, seq_set=set(), println=True):
     """Print out information about a packet
        
        Args:
@@ -103,25 +103,30 @@ def print_packet(timestamp, buf, seq_set=set()):
     """
     flags = []
     # Print out the timestamp in UTC
-    print('Timestamp: ', str(to_utc8(timestamp)))
+    if println:
+        print('Timestamp: ', str(to_utc8(timestamp)))
 
     # Unpack the Ethernet frame (mac src/dst, ethertype)
     try:
         eth = dpkt.ethernet.Ethernet(buf)
-        print('Ethernet Frame: ', mac_addr(eth.src), mac_addr(eth.dst), eth.type)
+        if println:
+            print('Ethernet Frame: ', mac_addr(eth.src), mac_addr(eth.dst), eth.type)
     except dpkt.NeedData:
-        print('Warning: dpkt.NeedData (dpkt.ethernet.Ethernet), try dpkt.sll.SLL')
+        if println:
+            print('Warning: dpkt.NeedData (dpkt.ethernet.Ethernet), try dpkt.sll.SLL')
         eth = dpkt.sll.SLL(buf)
         flags.append((Flags.ETH_DPKT_NEEDDATA, ''))
 
     # Make sure the Ethernet data contains an IP packet
     if isinstance(eth, dpkt.ethernet.Ethernet):
         if not isinstance(eth.data, dpkt.ip.IP):
-            print('Non IP Packet type not supported %s, try dpkt.sll.SLL' % eth.data.__class__.__name__)
+            if println:
+                print('Non IP Packet type not supported %s, try dpkt.sll.SLL' % eth.data.__class__.__name__)
             flags.append((Flags.ETH_NON_IP, ''))
             eth = dpkt.sll.SLL(buf)
     if not isinstance(eth.data, dpkt.ip.IP):
-        print('Non IP Packet type not supported %s, forcing the data type into dpkt.ip.IP ' % eth.data.__class__.__name__)
+        if println:
+            print('Non IP Packet type not supported %s, forcing the data type into dpkt.ip.IP ' % eth.data.__class__.__name__)
         flags.append((Flags.SLL_NON_IP, ''))
         vlan_tag = dpkt.ethernet.VLANtag8021Q(eth.data[:4])
         ip = dpkt.ip.IP(eth.data[4:])
@@ -136,23 +141,27 @@ def print_packet(timestamp, buf, seq_set=set()):
     fragment_offset = ip.off & dpkt.ip.IP_OFFMASK
 
     # Print out the info
-    print('IP: %s -> %s   (len=%d ttl=%d DF=%d MF=%d offset=%d)' % \
-          (inet_to_str(ip.src), inet_to_str(ip.dst), ip.len, ip.ttl, do_not_fragment, more_fragments, fragment_offset))
+    if println:
+        print('IP: %s -> %s   (len=%d ttl=%d DF=%d MF=%d offset=%d)' % \
+              (inet_to_str(ip.src), inet_to_str(ip.dst), ip.len, ip.ttl, do_not_fragment, more_fragments, fragment_offset))
     if (ip.len - (20+8)) % Payload.LENGTH == 0:
         udp = ip.data
         # udp.ulen: len( hdr(header)+pyl(payload) )
-        print('UDP: %d -> %d                   (len=%d pyl_len=%d)' % \
-              (udp.sport, udp.dport, udp.ulen, len(udp.data))) 
+        if println:
+            print('UDP: %d -> %d                   (len=%d pyl_len=%d)' % \
+                  (udp.sport, udp.dport, udp.ulen, len(udp.data))) 
         clogged_num = len(udp.data) // Payload.LENGTH
         ofst = 0
         if clogged_num > 1:
-            print('     clogged')
+            if println:
+                print('     clogged')
         for i in range(clogged_num):
             datetimedec = int(udp.data.hex()[ofst+0:ofst+8], 16)
             microsec = int(udp.data.hex()[ofst+8:ofst+16], 16)
             pyl_time = str(to_utc8((datetimedec + microsec / 1e6)))
             seq = int(udp.data.hex()[ofst+16:ofst+24], 16)
-            print('     %s      (seq=%d)' % (pyl_time, seq))
+            if println:
+                print('     %s      (seq=%d)' % (pyl_time, seq))
             if (i > 0) and (seq != prev+1):
                 if (inet_to_str(ip.dst) == Server.PUB_IP) or (inet_to_str(ip.dst) == Server.PVT_IP):
                     flags.append((Flags.SEQ_NOT_CONTI, (pyl_time, 'seq=%d' % seq, 'uplink')))
@@ -167,7 +176,8 @@ def print_packet(timestamp, buf, seq_set=set()):
                     flags.append((Flags.SEQ_DUPL, (pyl_time, 'seq=%d' % seq, 'downlink')))
             ofst += (Payload.LENGTH*2)  # 1 byte == 2 hexadecimal digits
             prev = seq
-    print()
+    if println:
+        print()
     return flags, seq_set
 
 def print_packets(pcap, N=50, ano_display=False, M=50):
@@ -179,6 +189,7 @@ def print_packets(pcap, N=50, ano_display=False, M=50):
            ano_display (bool): display the index of anomalies in data or not
            M (int): maximal display number of anomalies display (default: 50)
     """
+    print('=======================================================================')
     anomalies = {Flags.ETH_DPKT_NEEDDATA: [], 
                  Flags.SLL_DPKT_NEEDDATA: [], 
                  Flags.ETH_NON_IP: [], 
@@ -188,8 +199,11 @@ def print_packets(pcap, N=50, ano_display=False, M=50):
     # For each packet in the pcap process the contents
     seq_set = set()
     for i, (timestamp, buf) in enumerate(pcap):
-        print(i+1)
-        flags, seq_set = print_packet(timestamp, buf, seq_set)
+        if i+1 <= N:
+            print(i+1)
+            flags, seq_set = print_packet(timestamp, buf, seq_set)
+        else:
+            flags, seq_set = print_packet(timestamp, buf, seq_set, False)
         for flag in flags:
             if flag[1]:
                 anomalies[flag[0]].append((i+1, str(to_utc8(timestamp)), flag[1]))
@@ -197,7 +211,7 @@ def print_packets(pcap, N=50, ano_display=False, M=50):
                 anomalies[flag[0]].append((i+1, str(to_utc8(timestamp))))
         if i+1 == N:
             print('Maximal display number: %d. The remaining results are hidden.\n' % N)
-            break
+
     if ano_display:
         print('------- Anomalies -------')
         for key, lst in anomalies.items():
@@ -489,19 +503,19 @@ if __name__ == "__main__":
     f = open(cell_phone_file, "rb")
     pcap = dpkt.pcap.Reader(f)
     # overview_packets(pcap)
-    # print_packets(pcap)
+    print_packets(pcap, ano_display=True)
     # print_packets(pcap, 1000000, ano_display=True)
 
     f = open(server_UL_file, "rb")
     pcap = dpkt.pcap.Reader(f)
     # overview_packets(pcap)
-    # print_packets(pcap)
+    print_packets(pcap, ano_display=True)
     # print_packets(pcap, 1000000, ano_display=True)
 
     f = open(server_DL_file, "rb")
     pcap = dpkt.pcap.Reader(f)
     # overview_packets(pcap)
-    # print_packets(pcap)
+    print_packets(pcap, ano_display=True)
     # print_packets(pcap, 1000000, ano_display=True)
 
     # 透過以上觀察，可以大致掌握到以下的結論：
