@@ -232,8 +232,8 @@ def get_loss_latency_UL(pcap):
        Args:
            pcap: dpkt pcap reader object (dpkt.pcap.Reader) for Server-side uplink data
        Returns:
-           loss_timestamps (list): list of timestamps for each lost packet
-           latency ([x, y]): transmission timestamp and latency for each arrived packet
+           loss_timestamps (list): list of estimated timestamps for each lost packet on UE-side
+           latency ([x, y]): transmission timestamp (on UE-side) and latency for each arrived packet
     """
 
     # This for loop parse the payload of the iperf3 UDP packets and store the timestamps and the sequence numbers in timestamp_list; 
@@ -328,7 +328,9 @@ def get_loss_latency_UL(pcap):
                 loss_linspace = np.linspace(timestamp_store, timestamp, timestamp[3]-pointer+2)
                 loss_linspace = loss_linspace[1:-1]
                 for item in loss_linspace:
-                    loss_time = to_utc8(item[0])
+                    print(item)
+                    # !!! Uplink: estimated transmitted time (UE-side) !!!
+                    loss_time = to_utc8(item[1] + item[2]/1e6)
                     loss_timestamps.append(loss_time)
         # Update
         timestamp_store = timestamp
@@ -362,8 +364,8 @@ def get_loss_latency_DL(pcap):
        Args:
            pcap: dpkt pcap reader object (dpkt.pcap.Reader) for UE-side data
        Returns:
-           loss_timestamps (list): list of timestamps for each lost packet
-           latency ([x, y]): arrival timestamp and latency for each arrived packet
+           loss_timestamps (list): list of estimated timestamps for each lost packet on UE-side
+           latency ([x, y]): arrival timestamp (on UE-side) and latency for each arrived packet
     """
 
     # This for loop parse the payload of the iperf3 UDP packets and store the timestamps and the sequence numbers in timestamp_list; 
@@ -462,6 +464,7 @@ def get_loss_latency_DL(pcap):
                 loss_linspace = np.linspace(timestamp_store, timestamp, timestamp[3]-pointer+2)
                 loss_linspace = loss_linspace[1:-1]
                 for item in loss_linspace:
+                    # !!! Downlink: expected arrival time (UE-side) !!!
                     loss_time = to_utc8(item[0])
                     loss_timestamps.append(loss_time)
         # Update
