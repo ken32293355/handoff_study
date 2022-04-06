@@ -7,9 +7,6 @@ def pcap_to_csv(infilepath, outfilepath):
     s = "tshark -r %s -T\
 fields -e frame.number -e frame.time -e ip.src -e ip.dst\
  -e frame.len -e tcp.analysis.acks_frame  -e tcp.len -e tcp.analysis.ack_rtt  -e _ws.col.Info -e tcp.payload -E header=y -E separator=@ >%s"%(infilepath, outfilepath)
-#     s = "tshark -r %s -T\
-# fields -e frame.number -e frame.time -e ip.src -e ip.dst\
-#  -e frame.len -e tcp.analysis.ack_rtt  -e _ws.col.Info  -E header=y -E separator=@ >%s&"%(infilepath, outfilepath)
 
     print(s)
     subprocess.Popen([s], shell=True)
