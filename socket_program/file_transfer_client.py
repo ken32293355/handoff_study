@@ -23,7 +23,8 @@ def senddir(target_dir):
     dirlist = os.listdir(target_dir)
 
     for filename in dirlist:
-
+        if os.path.isdir(os.path.join(target_dir, filename)):
+            continue
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((TCP_IP, TCP_PORT))
         print("devicename", devicename)
@@ -47,6 +48,7 @@ def senddir(target_dir):
         print('Successfully send the file', filename)
         print('connection closed')
         time.sleep(1)
+
 senddir(target_dir4)
 senddir(target_dir3)
 senddir(target_dir2)
