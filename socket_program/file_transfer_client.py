@@ -14,9 +14,12 @@ devicename = devicename if '\n' not in devicename else devicename[:-1]
 target_dir1 = r"/sdcard/handoff_study/socket_program/pcapdir"
 target_dir3 = r"/sdcard/handoff_study/socket_program/ss"
 target_dir2 = r"/sdcard/Android/data/com.example.cellinfomonitor/files/Documents"
+target_dir4 = r"/sdcard/mobileinsight/log"
 
 def senddir(target_dir):
-
+    if not os.path.exists(target_dir):
+        print(target_dir, "not exists")
+        return
     dirlist = os.listdir(target_dir)
 
     for filename in dirlist:
