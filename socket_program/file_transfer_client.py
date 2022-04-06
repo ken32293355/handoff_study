@@ -47,7 +47,7 @@ def senddir(target_dir):
         print('Successfully send the file', filename)
         print('connection closed')
         time.sleep(1)
-
+senddir(target_dir4)
 senddir(target_dir3)
 senddir(target_dir2)
 senddir(target_dir1)
