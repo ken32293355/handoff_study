@@ -61,7 +61,7 @@ def connection(host, port, result):
 def get_ss(port):
     now = dt.datetime.today()
     n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
-    f = open(os.path.join(ss_dir, n)+'.csv', 'a+')
+    f = open(os.path.join(ss_dir, str(port) + '_' + n)+'.csv', 'a+')
     while not thread_stop:
         proc = subprocess.Popen(["ss -ai dst :%d"%(port)], stdout=subprocess.PIPE, shell=True)
         line = proc.stdout.readline()
@@ -85,11 +85,10 @@ def transmision(conn1, conn2):
     while time.time() - start_time < total_time and not thread_stop:
         try:
             t = time.time()
-            datetimedec = int(t)
-            microsec = int(str(t - int(t))[2:10])
-            z = i.to_bytes(8, 'big')
-            redundent = os.urandom(length_packet-8*3-1)
-            outdata = datetimedec.to_bytes(8, 'big') + microsec.to_bytes(8, 'big') + z + ok +redundent
+            t = int(t*1000).to_bytes(8, 'big')
+            z = i.to_bytes(4, 'big')
+            redundent = os.urandom(length_packet-12-1)
+            outdata = t + z + ok +redundent
             conn1.sendall(outdata)
             conn2.sendall(outdata)
             i += 1
@@ -106,8 +105,8 @@ def transmision(conn1, conn2):
 
 
     ok = (0).to_bytes(1, 'big')
-    redundent = os.urandom(length_packet-8*3-1)
-    outdata = datetimedec.to_bytes(8, 'big') + microsec.to_bytes(8, 'big') + z + ok +redundent
+    redundent = os.urandom(length_packet-12-1)
+    outdata = t + z + ok +redundent
     conn1.sendall(outdata)
     conn2.sendall(outdata)
 

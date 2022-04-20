@@ -17,7 +17,7 @@ HOST = '140.112.20.183'
 f = open("port.txt", "r")
 l = f.readline()
 PORT = int(l)
-# PORT = 3237
+PORT = 3237
 PORT2 = PORT + 10
 # PORT = 3231
 # PORT2 = 3241
@@ -85,12 +85,10 @@ def transmision(s_tcp):
             z = i.to_bytes(8, 'big')
             redundent = os.urandom(length_packet-8*3-1)
             outdata = datetimedec.to_bytes(8, 'big') + microsec.to_bytes(8, 'big') + z + ok +redundent
-            
             s_tcp.sendall(outdata)
             i += 1
             time.sleep(sleeptime)
             if time.time()-start_time > count:
-                # print("[%d-%d]"%(count-1, count), "transmit", i-prev_transmit)
                 count += 1
                 sleeptime = prev_sleeptime / expected_packet_per_sec * (i-prev_transmit) # adjust sleep time dynamically
                 prev_transmit = i
@@ -117,34 +115,22 @@ def receive(s_tcp):
     prev_loss = 0
     global thread_stop
     global buffer
-    buffer = queue.Queue()
+    recv_bytes = 0
     while not thread_stop:
         try:
             indata = s_tcp.recv(65535)
-            duplicate_num = len(indata) // length_packet
-            for j in range(duplicate_num):
-                seq = int(indata[16+j*length_packet:24+j*length_packet].hex(), 16)
-                # ts = int(int(indata[0:8].hex(), 16)) + float("0." + str(int(indata[8:16].hex(), 16)))
-                # print(dt.datetime.fromtimestamp(time.time())-dt.datetime.fromtimestamp(ts)-dt.timedelta(seconds=0.28))
-                # s_local.sendall(indata)
-                ok = int(indata[24+j*length_packet:25+j*length_packet].hex(), 16)
-                # buffer.put(indata)
-                if ok == 0:
-                    break
-                else:
-                    i += 1
+            recv_bytes += len(indata)
+
             if time.time()-start_time > count:
-                print("[%d-%d]"%(count-1, count), "capture", i-prev_capture)
+                print("[%d-%d]"%(count-1, count), recv_bytes*8/1024, "kbps")
                 prev_loss += seq-i+1-prev_loss
                 count += 1
-                prev_capture = i
+                recv_bytes = 0
         except Exception as inst:
             print("Error: ", inst)
             thread_stop = True
     thread_stop = True
-    print("[%d-%d]"%(count-1, count), "capture", i-prev_capture, "loss", seq-i+1-prev_loss, sep='\t')
     print("---Experiment Complete---")
-    print("Total capture: ", i, "Total lose: ", seq - i + 1)
     print("STOP receiving")
 
 

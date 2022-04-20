@@ -13,6 +13,9 @@ import signal
 parser = argparse.ArgumentParser()
 parser.add_argument("-p", "--port", type=int,
                     help="port to bind", default=3237)
+parser.add_argument("-b", "--bandwidth", type=float,
+                    help="port to bind", default=3237)
+
 args = parser.parse_args()
 print(args.port)
 
@@ -48,7 +51,6 @@ def connection(host, port ,result):
     s_tcp.setsockopt(socket.SOL_IP, IP_MTU_DISCOVER, IP_PMTUDISC_DO)
     s_tcp.setsockopt(socket.IPPROTO_TCP, TCP_CONGESTION, cong)
 
-
     s_tcp.bind((host, port))
     s_tcp.listen(1)
     conn, tcp_addr = s_tcp.accept()
@@ -81,11 +83,10 @@ def transmision(conn):
     while time.time() - start_time < total_time and not thread_stop:
         try:
             t = time.time()
-            datetimedec = int(t)
-            microsec = int(str(t - int(t))[2:10])
-            z = i.to_bytes(8, 'big')
-            redundent = os.urandom(length_packet-8*3-1)
-            outdata = datetimedec.to_bytes(8, 'big') + microsec.to_bytes(8, 'big') + z + ok +redundent
+            t = int(t*1000).to_bytes(8, 'big')
+            z = i.to_bytes(4, 'big')
+            redundent = os.urandom(length_packet-12-1)
+            outdata = t + z + ok +redundent
             conn.sendall(outdata)
             i += 1
             time.sleep(sleeptime)
@@ -102,7 +103,7 @@ def transmision(conn):
 
     ok = (0).to_bytes(1, 'big')
     redundent = os.urandom(length_packet-8*3-1)
-    outdata = datetimedec.to_bytes(8, 'big') + microsec.to_bytes(8, 'big') + z + ok +redundent
+    outdata = t + z + ok +redundent
     conn.sendall(outdata)
 
     print("transmit", i, "packets")
@@ -117,41 +118,26 @@ def receive(conn):
     seq = 0
     prev_capture = 0
     prev_loss = 0
+    recv_bytes = 0
     global thread_stop
     while not thread_stop:
         try:
             indata = conn.recv(65535)
+            recv_bytes += len(indata)
+
             if not indata:
                 print("close")
                 break
-            duplicate_num = len(indata) // length_packet
-            if len(indata) % length_packet != 0:
-                print("LEN", len(indata))
-                i += 1
-                continue                
-            for j in range(duplicate_num):
-                seq = int(indata[16+j*length_packet:24+j*length_packet].hex(), 16)
-                # ts = int(int(indata[0:8].hex(), 16)) + float("0." + str(int(indata[8:16].hex(), 16)))
-                # print(dt.datetime.fromtimestamp(time.time())-dt.datetime.fromtimestamp(ts)-dt.timedelta(seconds=0.28))
-                # s_local.sendall(indata)
-                ok = int(indata[24+j*length_packet:25+j*length_packet].hex(), 16)
-                if ok == 0:
-                    break
-                else:
-                    i += 1
             if time.time()-start_time > count:
-                print("[%d-%d]"%(count-1, count), "capture", i-prev_capture)
-                prev_loss += seq-i+1-prev_loss
+                print("[%d-%d]"%(count-1, count), recv_bytes*8/1024, "kbps")
+                recv_bytes = 0
                 count += 1
-                prev_capture = i
         except Exception as inst:
             print("Error: ", inst)
             thread_stop = True
     thread_stop = True
-    print("[%d-%d]"%(count-1, count), "capture", i-prev_capture, "loss", seq-i+1-prev_loss, sep='\t')
     print("---Experiment Complete---")
-    print("Total capture: ", i, "Total lose: ", seq - i + 1)
-    print("STOP bypass")
+    print("STOP receiving")
 
 
 if not os.path.exists(pcap_path):
@@ -206,13 +192,13 @@ while not exit_program:
     t3 = threading.Thread(target = get_ss, args = (PORT2,))
     t.start()
     t1.start()
-    t2.start()
-    t3.start()
+    # t2.start()
+    # t3.start()
     try:
         t.join()
         t1.join()
-        t2.join()
-        t3.join()
+        # t2.join()
+        # t3.join()
     except KeyboardInterrupt:
         print("finish")
         exit_program = True
