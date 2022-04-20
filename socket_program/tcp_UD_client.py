@@ -107,7 +107,7 @@ def transmision(s_tcp):
     print("transmit", i, "packets")
 
 def receive(s_tcp):
-    s_tcp.settimeout(3)
+    s_tcp.settimeout(10)
     print("wait for indata...")
     i = 0
     start_time = time.time()

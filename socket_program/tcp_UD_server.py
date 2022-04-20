@@ -43,7 +43,7 @@ prev_sleeptime = sleeptime
 pcap_path = "/home/wmnlab/D/pcap_data"
 ss_dir = "/home/wmnlab/D/ss"
 hostname = str(PORT) + ":"
-cong = 'cubic'.encode()
+cong = cong_algorithm.encode()
 
 def connection(host, port ,result):
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -71,7 +71,7 @@ def get_ss(port):
         time.sleep(1)
     f.close()
 def transmision(conn):
-    print("start transmision to addr", conn)
+    print(PORT, "start transmision to addr", conn)
     i = 0
     prev_transmit = 0
     ok = (1).to_bytes(1, 'big')
@@ -98,7 +98,7 @@ def transmision(conn):
                 prev_sleeptime = sleeptime
         except:
             break    
-    print("---transmision timeout---")
+    print(PORT, "---transmision timeout---")
 
 
     ok = (0).to_bytes(1, 'big')
@@ -110,8 +110,8 @@ def transmision(conn):
 
 
 def receive(conn):
-    conn.settimeout(3)
-    print("wait for indata...")
+    conn.settimeout(10)
+    print(PORT, "wait for indata...")
     i = 0
     start_time = time.time()
     count = 1
@@ -129,15 +129,15 @@ def receive(conn):
                 print("close")
                 break
             if time.time()-start_time > count:
-                print("[%d-%d]"%(count-1, count), recv_bytes*8/1024, "kbps")
+                # print("[%d-%d]"%(count-1, count), recv_bytes*8/1024, "kbps")
                 recv_bytes = 0
                 count += 1
         except Exception as inst:
             print("Error: ", inst)
             thread_stop = True
     thread_stop = True
-    print("---Experiment Complete---")
-    print("STOP receiving")
+    print(PORT, "---Experiment Complete---")
+    print(PORT, "STOP receiving")
 
 
 if not os.path.exists(pcap_path):
