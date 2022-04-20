@@ -73,13 +73,14 @@ def transmision(s_tcp):
     count = 1
     sleeptime = 1.0 / expected_packet_per_sec
     prev_sleeptime = sleeptime
+    redundent = os.urandom(length_packet-12-1)
+
     global thread_stop
     while time.time() - start_time < total_time and not thread_stop:
         try:
             t = time.time()
             t = int(t*1000).to_bytes(8, 'big')
             z = i.to_bytes(4, 'big')
-            redundent = os.urandom(length_packet-12-1)
             outdata = t + z + ok +redundent
             s_tcp.sendall(outdata)
             i += 1
@@ -95,7 +96,7 @@ def transmision(s_tcp):
     print("---transmision timeout---")
     ok = (0).to_bytes(1, 'big')
     redundent = os.urandom(length_packet-8*3-1)
-    outdata = datetimedec.to_bytes(8, 'big') + microsec.to_bytes(8, 'big') + z + ok +redundent
+    outdata = t + z + ok +redundent
     s_tcp.sendall(outdata)
 
     print("transmit", i, "packets")
