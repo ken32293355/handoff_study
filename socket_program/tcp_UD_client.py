@@ -12,6 +12,11 @@ import queue
 import subprocess
 import re
 
+
+subprocess.Popen(["settings put global ntp_server time.stdtime.gov.tw"], shell=True)
+subprocess.Popen(["settings get global ntp_server.tw"], shell=True)
+
+
 HOST = '140.112.20.183'
 
 f = open("port.txt", "r")
