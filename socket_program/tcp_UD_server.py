@@ -14,10 +14,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-p", "--port", type=int,
                     help="port to bind", default=3237)
 parser.add_argument("-b", "--bandwidth", type=float,
-                    help="port to bind", default=3237)
+                    help="port to bind", default=289.6)
 
 args = parser.parse_args()
 print(args.port)
+print(args.bandwidth)
 
 IP_MTU_DISCOVER   = 10
 IP_PMTUDISC_DONT  =  0  # Never send DF frames.
@@ -29,12 +30,11 @@ TCP_CONGESTION = 13
 
 HOST = '192.168.1.248'
 PORT = args.port
-PORT2 = args.port + 10
+PORT2 = args.port + 1
 thread_stop = False
 exit_program = False
 length_packet = 362
-bandwidth = 289.6*1000
-bandwidth = 289.6*10000
+bandwidth = args.bandwidth*1000
 total_time = 3600
 cong_algorithm = 'cubic'
 expected_packet_per_sec = bandwidth / (length_packet << 3)

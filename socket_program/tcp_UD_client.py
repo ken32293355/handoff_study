@@ -18,7 +18,7 @@ f = open("port.txt", "r")
 l = f.readline()
 PORT = int(l)
 PORT = 3237
-PORT2 = PORT + 10
+PORT2 = PORT + 1
 # PORT = 3231
 # PORT2 = 3241
 
