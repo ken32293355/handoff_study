@@ -77,11 +77,10 @@ def transmision(s_tcp):
     while time.time() - start_time < total_time and not thread_stop:
         try:
             t = time.time()
-            datetimedec = int(t)
-            microsec = int(str(t - int(t))[2:10])
-            z = i.to_bytes(8, 'big')
-            redundent = os.urandom(length_packet-8*3-1)
-            outdata = datetimedec.to_bytes(8, 'big') + microsec.to_bytes(8, 'big') + z + ok +redundent
+            t = int(t*1000).to_bytes(8, 'big')
+            z = i.to_bytes(4, 'big')
+            redundent = os.urandom(length_packet-12-1)
+            outdata = t + z + ok +redundent
             s_tcp.sendall(outdata)
             i += 1
             time.sleep(sleeptime)
