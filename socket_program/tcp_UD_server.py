@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-p", "--port", type=int,
                     help="port to bind", default=3237)
 parser.add_argument("-b", "--bandwidth", type=float,
-                    help="port to bind", default=289.6)
+                    help="port to bind", default=300)
 
 args = parser.parse_args()
 print(args.port)
@@ -33,7 +33,7 @@ PORT = args.port
 PORT2 = args.port + 1
 thread_stop = False
 exit_program = False
-length_packet = 362
+length_packet = 250
 bandwidth = args.bandwidth*1000
 total_time = 3600
 cong_algorithm = 'cubic'

@@ -28,8 +28,8 @@ server_addr = (HOST, PORT)
 
 thread_stop = False
 exit_program = False
-length_packet = 362
-bandwidth = 289.6*1000
+length_packet = 250
+bandwidth = 300
 total_time = 3600
 expected_packet_per_sec = bandwidth / (length_packet << 3)
 sleeptime = 1.0 / expected_packet_per_sec
