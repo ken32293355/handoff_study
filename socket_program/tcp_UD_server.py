@@ -36,7 +36,7 @@ exit_program = False
 length_packet = 250
 bandwidth = args.bandwidth*1000
 total_time = 3600
-cong_algorithm = 'cubic'
+cong_algorithm = 'reno'
 expected_packet_per_sec = bandwidth / (length_packet << 3)
 sleeptime = 1.0 / expected_packet_per_sec
 prev_sleeptime = sleeptime
@@ -130,7 +130,7 @@ def receive(conn):
                 print("close")
                 break
             if time.time()-start_time > count:
-                print("[%d-%d]"%(count-1, count), recv_bytes*8/1024, "kbps")
+                #print("[%d-%d]"%(count-1, count), recv_bytes*8/1024, "kbps")
                 recv_bytes = 0
                 count += 1
         except Exception as inst:

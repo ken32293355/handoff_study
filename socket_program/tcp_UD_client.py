@@ -44,7 +44,7 @@ IP_PMTUDISC_WANT  =  1  # Use per route hints.
 IP_PMTUDISC_DO    =  2  # Always DF.
 IP_PMTUDISC_PROBE =  3  # Ignore dst pmtu.
 TCP_CONGESTION = 13   # defined in /usr/include/netinet/tcp.h
-cong = 'cubic'.encode()
+cong = 'reno'.encode()
 
 def get_ss(port):
     now = dt.datetime.today()
