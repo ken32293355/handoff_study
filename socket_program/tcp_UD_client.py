@@ -65,7 +65,7 @@ def connection_setup(host, port, result):
     s_tcp.connect((host, port))
     # s_tcp.setsockopt(socket.SOL_IP, IP_MTU_DISCOVER, IP_PMTUDISC_DONT)
     # s_tcp.setsockopt(socket.SOL_IP, IP_MTU_DISCOVER, IP_PMTUDISC_DO)
-    # s_tcp.setsockopt(socket.IPPROTO_TCP, TCP_CONGESTION, cong)
+    s_tcp.setsockopt(socket.IPPROTO_TCP, TCP_CONGESTION, cong)
     result[0] = s_tcp
     return s_tcp
 
