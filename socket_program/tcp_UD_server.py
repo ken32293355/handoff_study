@@ -92,7 +92,7 @@ def transmision(conn):
             i += 1
             time.sleep(sleeptime)
             if time.time()-start_time > count:
-                #print("[%d-%d]"%(count-1, count), "transmit", i-prev_transmit)
+                # print("[%d-%d]"%(count-1, count), "transmit", i-prev_transmit)
                 count += 1
                 sleeptime = prev_sleeptime / expected_packet_per_sec * (i-prev_transmit) # adjust sleep time dynamically
                 prev_transmit = i
@@ -130,7 +130,7 @@ def receive(conn):
                 print("close")
                 break
             if time.time()-start_time > count:
-                # print("[%d-%d]"%(count-1, count), recv_bytes*8/1024, "kbps")
+                print("[%d-%d]"%(count-1, count), recv_bytes*8/1024, "kbps")
                 recv_bytes = 0
                 count += 1
         except Exception as inst:
