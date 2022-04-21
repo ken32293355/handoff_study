@@ -48,8 +48,8 @@ cong = cong_algorithm.encode()
 def connection(host, port ,result):
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s_tcp.setsockopt(socket.SOL_IP, IP_MTU_DISCOVER, IP_PMTUDISC_DO)
-    s_tcp.setsockopt(socket.IPPROTO_TCP, TCP_CONGESTION, cong)
+    # s_tcp.setsockopt(socket.SOL_IP, IP_MTU_DISCOVER, IP_PMTUDISC_DO)
+    # s_tcp.setsockopt(socket.IPPROTO_TCP, TCP_CONGESTION, cong)
 
     s_tcp.bind((host, port))
     s_tcp.listen(1)
@@ -79,13 +79,14 @@ def transmision(conn):
     count = 1
     sleeptime = 1.0 / expected_packet_per_sec
     prev_sleeptime = sleeptime
+    redundent = os.urandom(length_packet-12-1)
+
     global thread_stop
     while time.time() - start_time < total_time and not thread_stop:
         try:
             t = time.time()
             t = int(t*1000).to_bytes(8, 'big')
             z = i.to_bytes(4, 'big')
-            redundent = os.urandom(length_packet-12-1)
             outdata = t + z + ok +redundent
             conn.sendall(outdata)
             i += 1
