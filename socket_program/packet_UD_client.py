@@ -34,7 +34,6 @@ def connection_setup():
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s_tcp.connect((HOST, PORT))
-    # s_udp.sendto("123".encode(), server_addr) # Required! don't comment it
 
     s_udp.settimeout(0)
 
@@ -72,6 +71,7 @@ def connection_setup():
 
 def transmision(s_udp):
     print("start transmision to addr", s_udp)
+    global thread_stop
     i = 0
     prev_transmit = 0
     ok = (1).to_bytes(1, 'big')
@@ -116,8 +116,6 @@ def receive(s_udp):
     prev_capture = 0
     prev_loss = 0
     global thread_stop
-    global buffer
-    buffer = queue.Queue()
     while not thread_stop:
         try:
             indata, addr = s_udp.recvfrom(1024)
@@ -126,9 +124,7 @@ def receive(s_udp):
             seq = int(indata[16:24].hex(), 16)
             ts = int(int(indata[0:8].hex(), 16)) + float("0." + str(int(indata[8:16].hex(), 16)))
             # print(dt.datetime.fromtimestamp(time.time())-dt.datetime.fromtimestamp(ts)-dt.timedelta(seconds=0.28))
-            # s_local.sendall(indata)
             ok = int(indata[24:25].hex(), 16)
-            # buffer.put(indata)
             if ok == 0:
                 break
             else:

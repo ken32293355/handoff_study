@@ -8,6 +8,7 @@ import datetime as dt
 import argparse
 import subprocess
 import re
+import signal
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-p1", "--port1", type=int,
@@ -25,21 +26,21 @@ TCP_CONGESTION = 13
 
 
 HOST = '192.168.1.248'
-PORT = args.port1
-PORT2 = args.port2
-PORT3 = args.port1 + 10
-PORT4 = args.port2 + 10
+PORT = args.port1           # UL
+PORT2 = args.port2          # UL
+PORT3 = args.port1 + 10     # DL
+PORT4 = args.port2 + 10     # DL
 
 thread_stop = False
 exit_program = False
 length_packet = 362
-bandwidth = 289.6*1000
+bandwidth = 289.6*1000*10
 total_time = 3600
 cong_algorithm = 'cubic'
 expected_packet_per_sec = bandwidth / (length_packet << 3)
 sleeptime = 1.0 / expected_packet_per_sec
 prev_sleeptime = sleeptime
-pcap_path = "/home/wmnlab/D/pcap_data"
+pcap_path = "/home/wmnlab/D/pcap_data2"
 ss_dir = "/home/wmnlab/D/ss"
 hostname = str(PORT) + ":"
 
@@ -48,6 +49,7 @@ cong = 'reno'.encode()
 def connection(host, port, result):
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    # s_tcp.setsockopt(socket.SOL_IP, IP_MTU_DISCOVER, IP_PMTUDISC_DO)
     s_tcp.setsockopt(socket.IPPROTO_TCP, TCP_CONGESTION, cong)
     s_tcp.bind((host, port))
     print((host, port), "wait for connection...")
@@ -59,7 +61,7 @@ def connection(host, port, result):
 def get_ss(port):
     now = dt.datetime.today()
     n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
-    f = open(os.path.join(ss_dir, n)+'.csv', 'a+')
+    f = open(os.path.join(ss_dir, str(port) + '_' + n)+'.csv', 'a+')
     while not thread_stop:
         proc = subprocess.Popen(["ss -ai dst :%d"%(port)], stdout=subprocess.PIPE, shell=True)
         line = proc.stdout.readline()
@@ -68,6 +70,7 @@ def get_ss(port):
         f.write(",".join([str(dt.datetime.now())]+ re.split("[: \n\t]", line))+'\n')
         time.sleep(1)
     f.close()
+
 def transmision(conn1, conn2):
     print("start transmision to addr", conn1)
     print("start transmision to addr", conn2)
@@ -82,11 +85,10 @@ def transmision(conn1, conn2):
     while time.time() - start_time < total_time and not thread_stop:
         try:
             t = time.time()
-            datetimedec = int(t)
-            microsec = int(str(t - int(t))[2:10])
-            z = i.to_bytes(8, 'big')
-            redundent = os.urandom(length_packet-8*3-1)
-            outdata = datetimedec.to_bytes(8, 'big') + microsec.to_bytes(8, 'big') + z + ok +redundent
+            t = int(t*1000).to_bytes(8, 'big')
+            z = i.to_bytes(4, 'big')
+            redundent = os.urandom(length_packet-12-1)
+            outdata = t + z + ok +redundent
             conn1.sendall(outdata)
             conn2.sendall(outdata)
             i += 1
@@ -103,8 +105,8 @@ def transmision(conn1, conn2):
 
 
     ok = (0).to_bytes(1, 'big')
-    redundent = os.urandom(length_packet-8*3-1)
-    outdata = datetimedec.to_bytes(8, 'big') + microsec.to_bytes(8, 'big') + z + ok +redundent
+    redundent = os.urandom(length_packet-12-1)
+    outdata = t + z + ok +redundent
     conn1.sendall(outdata)
     conn2.sendall(outdata)
 
@@ -167,10 +169,17 @@ while not exit_program:
 
     now = dt.datetime.today()
     n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
-    tcpproc1 =  subprocess.Popen(["tcpdump -i any port %s -w %s/UL_%s_%s.pcap&"%(PORT, pcap_path,PORT, n)], shell=True)
-    tcpproc2 =  subprocess.Popen(["tcpdump -i any port %s -w %s/UL_%s_%s.pcap&"%(PORT2, pcap_path,PORT2, n)], shell=True)
-    tcpproc3 =  subprocess.Popen(["tcpdump -i any port %s -w %s/DL_%s_%s.pcap&"%(PORT3, pcap_path,PORT3, n)], shell=True)
-    tcpproc4 =  subprocess.Popen(["tcpdump -i any port %s -w %s/DL_%s_%s.pcap&"%(PORT4, pcap_path,PORT4, n)], shell=True)
+
+    pcapfile1 = "%s/UL_%s_%s.pcap"%(pcap_path, PORT, n)
+    pcapfile2 = "%s/UL_%s_%s.pcap"%(pcap_path, PORT2, n)
+    pcapfile3 = "%s/DL_%s_%s.pcap"%(pcap_path, PORT3, n)
+    pcapfile4 = "%s/DL_%s_%s.pcap"%(pcap_path, PORT4, n)
+
+
+    tcpproc1 =  subprocess.Popen(["tcpdump -i any port %s -w %s &"%(PORT,  pcapfile1)], shell=True, preexec_fn=os.setsid)
+    tcpproc2 =  subprocess.Popen(["tcpdump -i any port %s -w %s &"%(PORT2, pcapfile2)], shell=True, preexec_fn=os.setsid)
+    tcpproc3 =  subprocess.Popen(["tcpdump -i any port %s -w %s &"%(PORT3, pcapfile3)], shell=True, preexec_fn=os.setsid)
+    tcpproc4 =  subprocess.Popen(["tcpdump -i any port %s -w %s &"%(PORT4, pcapfile4)], shell=True, preexec_fn=os.setsid)
     time.sleep(1)
     try:
         result1 = [None]
@@ -193,14 +202,37 @@ while not exit_program:
         s_tcp2, conn2, tcp_addr2 = result2[0]
         s_tcp3, conn3, tcp_addr3 = result3[0]
         s_tcp4, conn4, tcp_addr4 = result4[0]
+    except KeyboardInterrupt:
+        print("KeyboardInterrupt -> kill tcpdump")
+        os.killpg(os.getpgid(tcpproc1.pid), signal.SIGTERM)
+        os.killpg(os.getpgid(tcpproc2.pid), signal.SIGTERM)
+        os.killpg(os.getpgid(tcpproc3.pid), signal.SIGTERM)
+        os.killpg(os.getpgid(tcpproc4.pid), signal.SIGTERM)
+        subprocess.Popen(["rm %s"%(pcapfile1)], shell=True)
+        subprocess.Popen(["rm %s"%(pcapfile2)], shell=True)
+        subprocess.Popen(["rm %s"%(pcapfile3)], shell=True)
+        subprocess.Popen(["rm %s"%(pcapfile4)], shell=True)
+        exit_program = True
+        thread_stop = True
+        break
+
     except Exception as inst:
         print("Connection Error:", inst)
+        os.killpg(os.getpgid(tcpproc1.pid), signal.SIGTERM)
+        os.killpg(os.getpgid(tcpproc2.pid), signal.SIGTERM)
+        os.killpg(os.getpgid(tcpproc3.pid), signal.SIGTERM)
+        os.killpg(os.getpgid(tcpproc4.pid), signal.SIGTERM)
+        subprocess.Popen(["rm %s"%(pcapfile1)], shell=True)
+        subprocess.Popen(["rm %s"%(pcapfile2)], shell=True)
+        subprocess.Popen(["rm %s"%(pcapfile3)], shell=True)
+        subprocess.Popen(["rm %s"%(pcapfile4)], shell=True)
+
         continue
     conn1.sendall(b"START")
     conn2.sendall(b"START")
     conn3.sendall(b"START")
     conn4.sendall(b"START")
-
+    time.sleep(0.5)
     thread_stop = False
     t = threading.Thread(target = transmision, args = (conn3, conn4))
     t1 = threading.Thread(target = receive, args = (conn1,))
@@ -239,7 +271,7 @@ while not exit_program:
         conn2.close()
         conn3.close()
         conn4.close()
-        tcpproc1.terminate()
-        tcpproc2.terminate()
-        tcpproc3.terminate()
-        tcpproc4.terminate()
+        os.killpg(os.getpgid(tcpproc1.pid), signal.SIGTERM)
+        os.killpg(os.getpgid(tcpproc2.pid), signal.SIGTERM)
+        os.killpg(os.getpgid(tcpproc3.pid), signal.SIGTERM)
+        os.killpg(os.getpgid(tcpproc4.pid), signal.SIGTERM)

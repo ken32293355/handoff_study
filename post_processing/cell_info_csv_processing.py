@@ -12,7 +12,7 @@ filenames = os.listdir(dirname)
 
 csv_files = []
 for filename in filenames:
-    if ".csv" in filename:
+    if ".csv" in filename and "mi2log" not in filename and "new" not in filename and "pcap" not in filename and "-" not in filename:
         csv_files.append(dirname + filename)
         
 for csv_file in csv_files:

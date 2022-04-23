@@ -8,6 +8,7 @@ import os
 import datetime as dt
 import argparse
 import subprocess
+import signal
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-p", "--port", type=int,
@@ -204,8 +205,7 @@ while not exit_program:
     now = dt.datetime.today()
     n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
     #os.system("echo wmnlab | sudo -S pkill tcpdump")
-    # os.system("echo wmnlab | sudo -S tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT, pcap_path,PORT, n))
-    tcpproc =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT, pcap_path,PORT, n)], shell=True)
+    tcpproc =  subprocess.Popen(["tcpdump -i any port %s -w %s/%s_%s.pcap&"%(PORT, pcap_path,PORT, n)], shell=True, preexec_fn=os.setsid)
     time.sleep(1)
     try:
         s_tcp, s_udp, conn, tcp_addr, udp_addr = connection()
@@ -236,4 +236,4 @@ while not exit_program:
     s_udp.close()
     conn.close()
     # os.system("echo wmnlab | sudo -S pkill tcpdump")
-    tcpproc.terminate()
+    os.killpg(os.getpgid(tcpproc.pid), signal.SIGTERM)

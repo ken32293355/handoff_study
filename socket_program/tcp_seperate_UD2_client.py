@@ -63,20 +63,22 @@ def get_ss(port):
 
 def connection_setup(host, port, result):
     s_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s_tcp.setsockopt(socket.SOL_IP, IP_MTU_DISCOVER, IP_PMTUDISC_DO)
+    # s_tcp.setsockopt(socket.SOL_IP, IP_MTU_DISCOVER, IP_PMTUDISC_DO)
     s_tcp.setsockopt(socket.IPPROTO_TCP, TCP_CONGESTION, cong)
     s_tcp.settimeout(10)
     s_tcp.connect((host, port))
     # s_tcp.setsockopt(socket.SOL_IP, IP_MTU_DISCOVER, IP_PMTUDISC_DONT)
 
     while True:
-        print("wait for starting...")
+        print("%d wait for starting..."%(port))
         try:
             indata = s_tcp.recv(65535)
             if indata == b'START':
                 print("START")
                 break
-
+            else:
+                print("WTF", indata)
+                break
         except Exception as inst:
             print("Error: ", inst)
 
@@ -174,8 +176,7 @@ while not exitprogram:
             break
         now = dt.datetime.today()
         n = '-'.join([str(x) for x in[ now.year, now.month, now.day, now.hour, now.minute, now.second]])
-        os.system("tcpdump -i any net 140.112.20.183 -w %s/%s.pcap &"%(pcap_path,n))
-        tcpdumpproc =  subprocess.Popen(["tcpdump -i any net 140.112.20.183  -w %s/%s.pcap&"%(pcap_path, n)], shell=True)
+        # os.system("tcpdump -i any net 140.112.20.183 -w %s/%s.pcap &"%(pcap_path,n))
 
         result1 = [None]
         result2 = [None]
@@ -191,14 +192,17 @@ while not exitprogram:
 
     except Exception as inst:
         print("Error: ", inst)
-        # os.system("pkill tcpdump")
-        tcpdumpproc.terminate()
+        os.system("pkill tcpdump")
         continue
     thread_stop = False
     t = threading.Thread(target=transmision, args=(s_tcp1, ))
     t2 = threading.Thread(target=receive, args=(s_tcp2, ))
+    t3 = threading.Thread(target=get_ss, args=(PORT, ))
+    t4 = threading.Thread(target=get_ss, args=(PORT2, ))
     t.start()
     t2.start()
+    t3.start()
+    t4.start()
     try:
 
         while True and t.is_alive():
@@ -212,6 +216,8 @@ while not exitprogram:
         thread_stop = True
         t.join()
         t2.join()
+        t3.join()
+        t4.join()
 
 
     except Exception as inst:
@@ -221,4 +227,4 @@ while not exitprogram:
         thread_stop = True
         s_tcp1.close()
         s_tcp2.close()
-        tcpdumpproc.terminate()
+        os.system("pkill tcpdump")
