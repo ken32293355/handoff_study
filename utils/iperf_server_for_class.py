@@ -6,7 +6,7 @@ import time, subprocess
 
 
 if __name__ == '__main__':
-
+    os.system("echo wmnlab | sudo -S su")
     t = dt.datetime.today()
     n = '-'.join([str(x) for x in[ t.year, t.month, t.day, t.hour, t.minute, t.second]])
 
