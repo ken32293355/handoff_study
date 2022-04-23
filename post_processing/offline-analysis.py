@@ -16,6 +16,8 @@ if __name__ == "__main__":
     dirpath = sys.argv[1]
     filenames = os.listdir(dirpath)
     for each_file in filenames:
+        if not each_file.endswith(".mi2log"):
+            continue
         print(each_file)
         path = sys.argv[1] + each_file
         
