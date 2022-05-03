@@ -46,10 +46,6 @@ for dirname in all_file_dir:
         if '.csv' in filename:
             mi_files.append('diag_txt/'+filename)
             
-    print(len(mi_files), mi_files)
-    print(len(csv_files), csv_files)
-    print(len(cell_phone_pcap_files), cell_phone_pcap_files)
-    print(len(UL_pcap_files), UL_pcap_files)
 
     grouping = []
     interval = []

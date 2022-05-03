@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import intervals as I
 
-dirnames = ["3232", "0929", "3231"]
+dirnames = ["/home/wmnlab/Desktop/tmp"]
 mi_files = []
 csv_files = []
 pcap_files = []

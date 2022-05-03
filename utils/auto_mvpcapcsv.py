@@ -112,6 +112,7 @@ for filename in os.listdir(pcap_csv_dir):
             
             continue
 
+        date = get_pcap_date(filepath)
         if date == "-1":
             os.remove(filepath)
             continue
