@@ -12,7 +12,8 @@ fields -e frame.number -e frame.time -e ip.src -e ip.dst\
     time.sleep(10)
 
 
-if len(sys.argv) == 2:
+
+if os.path.isdir(sys.argv[1]):
 
     dirname = sys.argv[1]
 
@@ -25,7 +26,7 @@ if len(sys.argv) == 2:
 
         pcap_to_csv(os.path.join(dirname, fname), os.path.join(dirname, fname[:fname.find(".pcap")]+"_pcap.csv"))
 
-elif len(sys.argv) == 3:
+elif sys.argv[1].endswith(".pcap"):
 
     fname = sys.argv[1]
 
@@ -33,3 +34,6 @@ elif len(sys.argv) == 3:
         exit
         
     pcap_to_csv(fname, os.path.join(fname[:fname.find(".pcap")]+"_pcap.csv"))
+
+else:
+    print("what the hell is", sys.argv[1])
