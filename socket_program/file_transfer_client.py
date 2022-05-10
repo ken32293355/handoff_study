@@ -5,7 +5,7 @@ import os
 import time
 
 TCP_IP = '140.112.20.183'
-TCP_PORT = 3280
+TCP_PORT = 3230
 BUFFER_SIZE = 1024
 
 devicename = open("device.txt", "r").readline()

@@ -4,7 +4,7 @@ from threading import Thread
 import os
 
 TCP_IP = '192.168.1.248'
-TCP_PORT = 3280
+TCP_PORT = 3230
 BUFFER_SIZE = 4096
 targetdir = "/home/wmnlab/D"
 
