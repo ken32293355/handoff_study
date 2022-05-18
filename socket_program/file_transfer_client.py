@@ -15,6 +15,7 @@ target_dir1 = r"/sdcard/handoff_study/socket_program/pcapdir"
 target_dir3 = r"/sdcard/handoff_study/socket_program/ss"
 target_dir2 = r"/sdcard/Android/data/com.example.cellinfomonitor/files/Documents"
 target_dir4 = r"/sdcard/mobileinsight/log"
+target_dir5 = r"/home/wmnlab/data"
 
 def senddir(target_dir):
     if not os.path.exists(target_dir):
@@ -49,6 +50,7 @@ def senddir(target_dir):
         print('connection closed')
         time.sleep(1)
 
+senddir(target_dir5)
 senddir(target_dir4)
 senddir(target_dir3)
 senddir(target_dir2)
