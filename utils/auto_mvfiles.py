@@ -12,6 +12,9 @@ def is_cellinfo_csv(filename):
     return not "pcap" in filename and not ("-") in filename and ".csv" in filename and "_new" in filename
 def is_mi2log_csv(filename):
     return "mi2log" in filename and "csv" in filename
+def is_ss_csv(filename):
+    return "ss" in filename and "csv" in filename
+
 
 def savemove(targetdir, filepath, filename):
     if not os.path.exists(targetdir):
@@ -24,7 +27,8 @@ def get_pcap_date(pcapfile):
         df = pd.read_csv(pcapfile, sep="@")
         d = pd.to_datetime(df.loc[0, 'frame.time'])
         d = ("%2d%2d"%(d.month, d.day)).replace(" ", "0")
-    except:
+    except Exception as inst:
+        print("Error: ", inst)
         return "-1"
     return d
 
@@ -48,7 +52,44 @@ def get_mi2log_date(cellinfofile):
         return "-1"
     return d
 
+def read_ss_file(filename):
+    f = open(filename)
+    l = f.readline()
+    time_l = []
+    cwnd_l = []
+    while l:
+        l = l.split(',')
+        if l[17] == 'cwnd':
+            print(l[0], l[18])
+            time_l.append(l[0])
+            cwnd_l.append(l[18])
+        else:
+            print('WTF', l)
+        l = f.readline()
 
+    df = pd.DataFrame({'time': time_l, 'cwnd': cwnd_l})
+    return df
+
+def get_ss_date(filename):
+
+    try:
+        f = open(filename)
+        l = f.readline()
+        time_l = []
+        cwnd_l = []
+        while l:
+            try:
+                l = l.split(',')
+                d = pd.to_datetime(l[0])
+                d = ("%2d%2d"%(d.month, d.day)).replace(" ", "0")
+                return d
+            except:
+                l = f.readline()
+
+        df = pd.DataFrame({'time': time_l, 'cwnd': cwnd_l})
+    except:
+        return "-1"
+    return "-1"
 
 
 
@@ -70,3 +111,10 @@ for filename in os.listdir(dirpath):
             os.mkdir(os.path.join(dirpath, date))
         savemove(os.path.join(dirpath, date, "mi2log"), filepath, filename)
     
+    if is_ss_csv(filepath):
+        date = get_ss_date(filepath)
+        if not os.path.exists( os.path.join(dirpath, date) ):
+            os.mkdir(os.path.join(dirpath, date))
+        savemove(os.path.join(dirpath, date, "ss"), filepath, filename)
+    
+

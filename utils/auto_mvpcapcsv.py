@@ -45,9 +45,14 @@ band_to_device ={
     "3262": "xm16",
     "3263": "xm17",
     "3264": "xm17",
+    "3271": "mptcpsocket",
 }
 
 def get_device(filename):
+    port = filename[10:14]
+    if port.isdigit():
+        if int(port) >= 3070:
+            return "redundant"
     for band in band_to_device:
         if band in filename:
             return band_to_device[band]
@@ -88,9 +93,8 @@ for filename in os.listdir(pcap_csv_dir):
         date = get_pcap_date(filepath)
 
         if date == "-1":
-            os.remove(filepath)
+            # os.remove(filepath)
             continue
-        print(filename, device, date)
 
         targetdir = os.path.join(D_dir, device, date, "server_ul_pcap")
 
@@ -114,12 +118,12 @@ for filename in os.listdir(pcap_csv_dir):
 
         date = get_pcap_date(filepath)
         if date == "-1":
-            os.remove(filepath)
+            print("rm", filepath, "?")
+            # os.remove(filepath)
             continue
 
 
         date = get_pcap_date(filepath)
-        print(filename, device, date)
 
         targetdir = os.path.join(D_dir, device, date, "server_dl_pcap")
 
