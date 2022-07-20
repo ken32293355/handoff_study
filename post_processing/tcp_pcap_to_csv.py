@@ -4,16 +4,33 @@ import os
 import sys
 import time
 def pcap_to_csv(infilepath, outfilepath):
+
     s = "tshark -r %s -T\
-fields -e frame.number -e frame.time -e ip.src -e ip.dst\
- -e frame.len -e tcp.analysis.acks_frame  -e tcp.len -e tcp.analysis.ack_rtt -e tcp.srcport -e tcp.dstport -e _ws.col.Info -e tcp.payload -E header=y -E separator=@ >%s"%(infilepath, outfilepath)
+fields -e frame.number -e frame.time -e ip.src -e ip.dst -e _ws.col.Protocol\
+ -e frame.len -e tcp.analysis.acks_frame -e tcp.seq_raw -e tcp.len -e tcp.analysis.ack_rtt -e tcp.srcport  -e tcp.dstport -e tcp.analysis.bytes_in_flight -e tcp.analysis.retransmission -e tcp.analysis.fast_retransmission -e tcp.analysis.out_of_order -e tcp.payload -E header=y -E separator=@ >%s"%(infilepath, outfilepath)
+
+#     s = "tshark -r %s -T\
+# fields -e frame.number -e frame.time -e ip.src -e ip.dst\
+#  -e frame.len -e tcp.analysis.acks_frame  -e tcp.len -e tcp.analysis.ack_rtt -e tcp.srcport -e tcp.dstport -e _ws.col.Info -e tcp.payload -E header=y -E separator=@ >%s"%(infilepath, outfilepath)
     print(s)
     subprocess.Popen([s], shell=True)
-    time.sleep(10)
+    time.sleep(20)
 
 
 
-if os.path.isdir(sys.argv[1]):
+if len(sys.argv) == 1:
+    dirname = r"/home/wmnlab/D/pcap_data"
+
+
+    filenames = os.listdir(dirname)
+
+    for fname in sorted(filenames):
+        if not fname.endswith(".pcap"):
+            continue
+
+        pcap_to_csv(os.path.join(dirname, fname), os.path.join(dirname, fname[:fname.find(".pcap")]+"_pcap.csv"))
+
+elif os.path.isdir(sys.argv[1]):
 
     dirname = sys.argv[1]
 
