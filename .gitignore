@@ -3,3 +3,4 @@
 *.bak
 *.pcap
 *.log
+.ipynb_checkpoints
