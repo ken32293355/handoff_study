@@ -4,3 +4,4 @@
 *.pcap
 *.log
 .ipynb_checkpoints
+*.o
