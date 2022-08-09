@@ -1,3 +1,8 @@
+"""
+    Author: Jing-You, Yan
+    python3 auto_mvvideopcapcsv.py
+"""
+
 from genericpath import exists
 import sys
 import os
