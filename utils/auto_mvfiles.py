@@ -1,8 +1,15 @@
+"""
+    Author: Jing-You, Yan
+    python3 auto_mvfiles.py targetdir
+"""
+
 from genericpath import exists
 import sys
 import os
 import shutil
 import pandas as pd
+
+
 
 dirpath = sys.argv[1]
 
